@@ -1,0 +1,2 @@
+-keep class org.libtorrent4j.swig.** { *; }
+-keep class org.libtorrent4j.** { *; }
