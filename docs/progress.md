@@ -7,6 +7,38 @@ unresolved. Claims without measurements do not belong here.
 
 ---
 
+## 2026-07-20 — M2 started: the gamepad blocker is fixed
+
+**The problem:** since M0, a button highlighted on screen would not react to the
+handheld's action button. Without this the app is unusable on the target device, so
+it had to be solved before any other interface work.
+
+**The cause was not what it looked like.** It was originally written down as a
+focus problem. It was not: focus worked all along. The handheld reports its built-in
+controls to Android as an *Xbox controller*, and on that mapping the action button
+sends a code that Android does not recognise as "confirm" — it only accepts the
+centre of a directional pad, or Enter. The button was focused and simply never told
+to activate. Direction keys were unaffected, which is why moving between buttons
+always worked and only pressing them did not.
+
+**The fix:** the app now rewrites those two controller buttons into the ones Android
+understands, once, before they reach the screen — action → confirm, and the second
+button → back. Doing it in one place means every screen built from here on is
+gamepad-operable without extra work.
+
+**Tested on the device:** three action-button presses produced three activations,
+and the second button closed the screen as expected.
+
+**Worth recording:** the first test appeared to fail. It had not — the injected
+button press arrived before the window had taken focus. Repeating it showed the fix
+working. A single negative result was nearly enough to send this down the wrong path
+a second time.
+
+**Still to confirm:** verified with injected input, not yet with a physical press on
+the hardware buttons.
+
+---
+
 ## 2026-07-20 — Requirements refined
 
 The project owner clarified several assumptions. Changes:

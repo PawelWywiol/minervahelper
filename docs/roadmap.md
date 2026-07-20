@@ -11,7 +11,7 @@ Last updated: 2026-07-20
 |---|---|---|
 | **M0** | Project skeleton + proving the risky path | ✅ **done** |
 | **M1** | Catalogue: download, conversion, search | ✅ **done** |
-| **M2** | Interface: browsing, search, details, favourites | ⬜ next |
+| **M2** | Interface: browsing, search, details, favourites | 🔨 in progress |
 | **M3** | Download queue and engine | ⬜ |
 | **M4** | File placement, verification, platform mapping | ⬜ |
 | **M5** | Onboarding, settings, battery | ⬜ |
@@ -47,11 +47,11 @@ matched, 2 seconds. Details in [progress.md](progress.md).
 **Result:** 11-minute download, 60-second conversion, 395 MB catalogue,
 19 ms search. Verified byte-for-byte against a desktop conversion.
 
-## ⬜ M2 — Interface (next)
+## 🔨 M2 — Interface (in progress)
 
-- [ ] **Fix gamepad navigation** — a focused button does not respond to the action
-      button (found in M0). This is a blocker: without it the app cannot be used on
-      the target device.
+- [x] **Fix gamepad navigation** — a focused button did not respond to the action
+      button (found in M0). Cause: the handheld sends a gamepad button code that
+      Android does not treat as "confirm". Fixed and tested on the device.
 - [ ] Browse by collection and platform
 - [ ] Search screen wired to the catalogue
 - [ ] ROM detail screen

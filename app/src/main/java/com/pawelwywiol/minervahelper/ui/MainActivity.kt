@@ -2,6 +2,7 @@ package com.pawelwywiol.minervahelper.ui
 
 import android.os.Bundle
 import android.util.Log
+import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
@@ -17,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +38,9 @@ import java.io.File
 private const val SPIKE_TAG = "MinervaSpike"
 
 class MainActivity : ComponentActivity() {
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean =
+        super.dispatchKeyEvent(event.remapGamepad())
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -54,6 +59,7 @@ private fun SpikeScreen() {
     val scope = rememberCoroutineScope()
     val lines = remember { mutableStateListOf<String>() }
     var running by remember { mutableStateOf(false) }
+    var probeCount by remember { mutableIntStateOf(0) }
     val listState = rememberLazyListState()
     val focusRequester = remember { FocusRequester() }
 
@@ -64,8 +70,14 @@ private fun SpikeScreen() {
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Button(
-            enabled = !running,
             modifier = Modifier.focusRequester(focusRequester),
+            onClick = { probeCount++ },
+        ) {
+            Text("Gamepad probe — activated $probeCount×")
+        }
+
+        Button(
+            enabled = !running,
             onClick = {
                 running = true
                 lines.clear()
