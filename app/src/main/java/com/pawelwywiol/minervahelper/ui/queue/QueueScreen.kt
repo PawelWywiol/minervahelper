@@ -5,15 +5,19 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,6 +29,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.pawelwywiol.minervahelper.data.queue.DownloadQueue
 import com.pawelwywiol.minervahelper.data.queue.DownloadState
+import com.pawelwywiol.minervahelper.data.queue.DownloadedItem
 import com.pawelwywiol.minervahelper.data.placement.Destinations
 import com.pawelwywiol.minervahelper.data.queue.QueueItem
 import com.pawelwywiol.minervahelper.ui.FocusableRow
@@ -39,7 +44,14 @@ import kotlinx.coroutines.withContext
 fun QueueScreen(queue: DownloadQueue, destinations: Destinations, onFolders: () -> Unit) {
     val context = LocalContext.current
     var groups by remember { mutableStateOf<Map<String, List<QueueItem>>>(emptyMap()) }
-    LaunchedEffect(queue.revision) { groups = withContext(Dispatchers.IO) { queue.byTorrent() } }
+    var downloaded by remember { mutableStateOf<List<DownloadedItem>>(emptyList()) }
+    var confirmRemove by remember { mutableStateOf<QueueItem?>(null) }
+    LaunchedEffect(queue.revision) {
+        withContext(Dispatchers.IO) {
+            groups = queue.byTorrent()
+            downloaded = queue.downloaded()
+        }
+    }
 
     val items = groups.values.flatten()
     val total = items.sumOf { it.size }
@@ -64,6 +76,10 @@ fun QueueScreen(queue: DownloadQueue, destinations: Destinations, onFolders: () 
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary,
                 )
+                LinearProgressIndicator(
+                    progress = { it.percent / 100f },
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                )
             }
             if (destinations.root == null) {
                 Text(
@@ -73,20 +89,27 @@ fun QueueScreen(queue: DownloadQueue, destinations: Destinations, onFolders: () 
                 )
                 TextButton(onClick = onFolders) { Text("Choose folder") }
             }
-            Spacer(Modifier.height(8.dp))
-            Row {
-                Button(
-                    enabled = destinations.root != null &&
-                        items.any { it.state != DownloadState.DONE },
-                    onClick = { DownloadWorker.enqueue(context) },
-                ) {
-                    Text("Download")
-                }
-                Spacer(Modifier.width(8.dp))
-                Button(onClick = { DownloadWorker.cancel(context) }) { Text("Stop") }
-                if (items.any { it.state == DownloadState.FAILED }) {
-                    Spacer(Modifier.width(8.dp))
-                    Button(onClick = { queue.retryFailed() }) { Text("Retry failed") }
+            Text(
+                if (items.isEmpty())
+                    "Nothing is waiting. Find a game in Browse or Search and press Download — " +
+                        "it will appear here and fetch itself."
+                else "Games download by themselves as soon as they are added.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            if (items.isNotEmpty()) {
+                Spacer(Modifier.height(8.dp))
+                Row {
+                    OutlinedButton(onClick = { DownloadWorker.cancel(context) }) { Text("Stop") }
+                    if (items.any { it.state == DownloadState.FAILED }) {
+                        Spacer(Modifier.width(8.dp))
+                        Button(onClick = {
+                            queue.retryFailed()
+                            DownloadWorker.enqueue(context)
+                        }) {
+                            Text("Retry failed")
+                        }
+                    }
                 }
             }
         }
@@ -104,12 +127,12 @@ fun QueueScreen(queue: DownloadQueue, destinations: Destinations, onFolders: () 
                 }
                 items(group, key = { it.id }) { queued ->
                     FocusableRow(
-                        onClick = { queue.remove(queued.id) },
+                        onClick = { confirmRemove = queued },
                         modifier = Modifier.initialFocus(queued.id == firstId),
                     ) {
                         Text(queued.name, style = MaterialTheme.typography.bodyLarge)
                         Text(
-                            "${formatSize(queued.size)} · ${queued.state.name.lowercase()} · tap to remove",
+                            "${formatSize(queued.size)} · ${queued.state.name.lowercase()}",
                             style = MaterialTheme.typography.bodySmall,
                         )
                         queued.error?.let {
@@ -122,6 +145,43 @@ fun QueueScreen(queue: DownloadQueue, destinations: Destinations, onFolders: () 
                     }
                 }
             }
+            if (downloaded.isNotEmpty()) {
+                item(key = "downloaded-header") {
+                    Text(
+                        "Downloaded",
+                        style = MaterialTheme.typography.titleSmall,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    )
+                }
+                items(downloaded, key = { "downloaded-${it.id}" }) { done ->
+                    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
+                        Text(done.name, style = MaterialTheme.typography.bodyLarge)
+                        Text(
+                            formatSize(done.size) +
+                                (done.folder.takeIf { it.isNotBlank() }?.let { " · in $it" } ?: ""),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.tertiary,
+                        )
+                    }
+                }
+            }
         }
+    }
+
+    confirmRemove?.let { item ->
+        AlertDialog(
+            onDismissRequest = { confirmRemove = null },
+            title = { Text("Remove from queue?") },
+            text = { Text(item.name) },
+            confirmButton = {
+                TextButton(onClick = {
+                    queue.remove(item.id)
+                    confirmRemove = null
+                }) { Text("Remove") }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmRemove = null }) { Text("Cancel") }
+            },
+        )
     }
 }

@@ -37,7 +37,7 @@ possible future feature, out of scope for now.
 | R8 | Fetch the `.torrent` file assigned to a ROM | ✅ | M0 |
 | R9 | **Download only the selected files from a torrent** (the core of the project) | ✅ | M0 |
 | R10 | Group selected ROMs by torrent (one torrent = one job) | ✅ | M3 |
-| R11 | Background download queue (automatic start is R36) | ✅ | M3 |
+| R11 | Background download queue with automatic start (R36) | ✅ | M3 |
 | R12 | Pause / resume / cancel at any time | 🔨 | M3 |
 | R13 | Resume after the app is closed and after a device reboot | 🔨 | M3 |
 
@@ -74,16 +74,16 @@ a downloaded ROM as a program anyway. The limitation is spelled out in
 
 | ID | Requirement | Status | Stage |
 |---|---|---|---|
-| R22 | Intuitive interface, legible on a small screen | 🔨 | M7 |
+| R22 | Intuitive interface, legible on a small screen | ✅ | M7 |
 | R23 | **Full D-pad / gamepad operation, no touch required** | 🔨 | M2 |
 | R24 | Clear download progress and notifications | 🔨 | M3 |
 | R25 | First-run onboarding | ✅ | M5 |
 | R35 | **Live statistics while queueing and downloading** | ✅ | M3 |
-| R36 | Downloads start automatically when something is queued | ⬜ | M7 |
-| R37 | Finished downloads leave the queue; browse lists mark what is downloaded | ⬜ | M7 |
-| R38 | A file already in the destination (same name and size) counts as downloaded | ⬜ | M7 |
-| R39 | Changing a folder asks whether to move already-downloaded files | ⬜ | M7 |
-| R40 | **Finished-product look: navigation, visual identity, affordances, guidance** | 🔨 | M7 |
+| R36 | Downloads start automatically when something is queued | ✅ | M7 |
+| R37 | Finished downloads leave the queue; browse lists mark what is downloaded | ✅ | M7 |
+| R38 | A file already in the destination (same name and size) counts as downloaded | ✅ | M7 |
+| R39 | Changing a folder asks whether to move already-downloaded files | ✅ | M7 |
+| R40 | **Finished-product look: navigation, visual identity, affordances, guidance** | ✅ | M7 |
 
 **R36–R40 — added 2026-07-20** after the owner reviewed the working app. The full
 audit and the plan behind them: [design.md](design.md). R40 in one sentence: the user

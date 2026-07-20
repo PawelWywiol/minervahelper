@@ -57,8 +57,10 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
             return Result.failure()
         }
         queue.resetInterrupted()
+        // Only queued items: failed ones wait for an explicit retry, otherwise a permanently
+        // broken file would re-download on every run the queue chains up.
         val pending = queue.byTorrent()
-            .mapValues { (_, items) -> items.filter { it.state != DownloadState.DONE } }
+            .mapValues { (_, items) -> items.filter { it.state == DownloadState.QUEUED } }
             .filterValues { it.isNotEmpty() }
         if (pending.isEmpty()) return Result.success()
 
@@ -153,8 +155,11 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
             return
         }
         val failure = placementFailure(item, file)
-        if (failure == null) queue.setState(item.id, DownloadState.DONE)
-        else queue.setState(item.id, DownloadState.FAILED, failure)
+        if (failure == null) {
+            queue.markDownloaded(item, destinations.folderFor(item.collection, item.platformKey))
+        } else {
+            queue.setState(item.id, DownloadState.FAILED, failure)
+        }
     }
 
     /** Null when the file was placed; otherwise why it could not be. */
@@ -191,8 +196,10 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
                         .build()
                 )
                 .build()
+            // Append rather than replace: adding a game must not kill a download already running.
+            // Each add chains one more run; a run that finds nothing pending costs nothing.
             WorkManager.getInstance(context)
-                .enqueueUniqueWork(NAME, ExistingWorkPolicy.REPLACE, request)
+                .enqueueUniqueWork(NAME, ExistingWorkPolicy.APPEND_OR_REPLACE, request)
         }
 
         fun cancel(context: Context) {

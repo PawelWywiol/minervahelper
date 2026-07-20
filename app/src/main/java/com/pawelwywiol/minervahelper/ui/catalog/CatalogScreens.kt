@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -23,6 +24,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
@@ -33,7 +35,10 @@ import androidx.compose.ui.unit.dp
 import com.pawelwywiol.minervahelper.data.catalog.CatalogReader
 import com.pawelwywiol.minervahelper.data.catalog.CatalogSync
 import com.pawelwywiol.minervahelper.data.catalog.Favourites
+import com.pawelwywiol.minervahelper.data.placement.Destinations
+import com.pawelwywiol.minervahelper.data.placement.FilePlacement
 import com.pawelwywiol.minervahelper.data.queue.DownloadQueue
+import com.pawelwywiol.minervahelper.work.DownloadWorker
 import com.pawelwywiol.minervahelper.ui.FocusableRow
 import com.pawelwywiol.minervahelper.ui.FocusedList
 import com.pawelwywiol.minervahelper.ui.Screen
@@ -44,6 +49,7 @@ import com.pawelwywiol.minervahelper.work.CatalogSyncWorker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 
@@ -125,6 +131,7 @@ fun RomsScreen(
             .collect { if (it >= pager.roms.size - PREFETCH) pager.loadMore() }
     }
 
+    val downloadedKeys = remember(queue.revision) { queue.downloadedKeys() }
     Screen(title, showBack = true) {
         Row(modifier = Modifier.fillMaxSize()) {
             LazyColumn(state = listState, modifier = Modifier.weight(1f).fillMaxHeight()) {
@@ -135,7 +142,7 @@ fun RomsScreen(
                         modifier = Modifier.initialFocus(index == 0),
                     ) {
                         Text(rom.name, style = MaterialTheme.typography.bodyLarge)
-                        Text(formatSize(rom.size), style = MaterialTheme.typography.bodySmall)
+                        RomSubtitle(formatSize(rom.size), rom, downloadedKeys)
                     }
                 }
             }
@@ -170,13 +177,23 @@ fun SearchScreen(reader: CatalogReader, favourites: Favourites, queue: DownloadQ
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).focusRequester(focusRequester),
                 )
                 Spacer(Modifier.height(8.dp))
+                if (hits.isEmpty()) {
+                    Text(
+                        if (query.isBlank()) "Type a game's name to search the whole archive."
+                        else "Nothing found for “$query”.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                    )
+                }
+                val downloadedKeys = remember(queue.revision) { queue.downloadedKeys() }
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
                     items(hits, key = { it.id }) { rom ->
                         FocusableRow(onClick = { selected = rom.id }, selected = rom.id == selected) {
                             Text(rom.name, style = MaterialTheme.typography.bodyLarge)
-                            Text(
+                            RomSubtitle(
                                 "${rom.collection}/${rom.platformKey} · ${formatSize(rom.size)}",
-                                style = MaterialTheme.typography.bodySmall,
+                                rom, downloadedKeys,
                             )
                         }
                     }
@@ -196,9 +213,16 @@ fun FavouritesScreen(reader: CatalogReader, favourites: Favourites, queue: Downl
 
     Screen("Favourites") {
         if (keys.isEmpty()) {
-            Text("Nothing here yet.", modifier = Modifier.padding(horizontal = 16.dp))
+            Text(
+                "Nothing here yet. Open any game and press “Add to favourites” " +
+                    "to keep it at hand.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
             return@Screen
         }
+        val downloadedKeys = remember(queue.revision) { queue.downloadedKeys() }
         Row(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
                 FocusedList(roms) { rom, focus ->
@@ -208,9 +232,9 @@ fun FavouritesScreen(reader: CatalogReader, favourites: Favourites, queue: Downl
                         modifier = focus,
                     ) {
                         Text(rom.name, style = MaterialTheme.typography.bodyLarge)
-                        Text(
+                        RomSubtitle(
                             "${rom.collection}/${rom.platformKey} · ${formatSize(rom.size)}",
-                            style = MaterialTheme.typography.bodySmall,
+                            rom, downloadedKeys,
                         )
                     }
                 }
@@ -244,16 +268,38 @@ private fun RomDetailPane(
             var rom by remember(romId) { mutableStateOf<CatalogReader.Rom?>(null) }
             LaunchedEffect(romId) { rom = withContext(Dispatchers.IO) { reader.rom(romId) } }
             rom?.let {
+                val context = LocalContext.current
+                val scope = rememberCoroutineScope()
                 val inQueue = remember(queue.revision, it.id) { queue.contains(it) }
+                val downloaded = remember(queue.revision, it.id) { queue.isDownloaded(it) }
                 Text(it.name, style = MaterialTheme.typography.titleMedium)
+                if (downloaded) {
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "✓ Downloaded",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.tertiary,
+                    )
+                }
                 Spacer(Modifier.height(12.dp))
-                Button(onClick = { favourites.toggle(it) }) {
+                FilledTonalButton(onClick = { favourites.toggle(it) }) {
                     Text(if (favourites.contains(it)) "Remove from favourites" else "Add to favourites")
                 }
                 Spacer(Modifier.height(8.dp))
-                Button(onClick = { queue.toggle(it) }) {
-                    Text(if (inQueue) "Remove from queue" else "Add to queue")
+                Button(onClick = { scope.launch { toggleDownload(context, queue, it) } }) {
+                    Text(
+                        when {
+                            inQueue -> "Remove from queue"
+                            downloaded -> "Download again"
+                            else -> "Download"
+                        }
+                    )
                 }
+                Text(
+                    "Downloads start by themselves, over Wi-Fi, in the background.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
                 Spacer(Modifier.height(16.dp))
                 Detail("Platform", "${it.collection}/${it.platformKey}")
                 Detail("Size", formatSize(it.size))
@@ -262,6 +308,52 @@ private fun RomDetailPane(
                 Detail("SHA1", it.sha1 ?: "—")
             }
         }
+    }
+}
+
+/**
+ * Queueing is more than an insert: a file already sitting in the destination counts as downloaded
+ * instead of being fetched again (R38), and anything genuinely queued starts downloading on its
+ * own (R36) — unless the user explicitly asks for a re-download of something they already have.
+ */
+private suspend fun toggleDownload(
+    context: android.content.Context,
+    queue: DownloadQueue,
+    rom: CatalogReader.Rom,
+) {
+    val destinations = Destinations.get(context)
+    val added = withContext(Dispatchers.IO) {
+        when {
+            queue.contains(rom) -> { queue.toggle(rom); false }
+            queue.isDownloaded(rom) -> queue.toggle(rom)
+            else -> {
+                val root = destinations.root
+                val folder = destinations.folderFor(rom.collection, rom.platformKey)
+                if (root != null && FilePlacement(context).exists(root, folder, rom.name, rom.size)) {
+                    queue.recordDownloaded(rom, folder)
+                    false
+                } else {
+                    queue.toggle(rom)
+                }
+            }
+        }
+    }
+    if (added) DownloadWorker.enqueue(context)
+}
+
+@Composable
+private fun RomSubtitle(info: String, rom: CatalogReader.Rom, downloadedKeys: Set<String>) {
+    if (DownloadQueue.downloadedKey(rom) in downloadedKeys) {
+        Row {
+            Text(info, style = MaterialTheme.typography.bodySmall)
+            Text(
+                " · ✓ downloaded",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.tertiary,
+            )
+        }
+    } else {
+        Text(info, style = MaterialTheme.typography.bodySmall)
     }
 }
 

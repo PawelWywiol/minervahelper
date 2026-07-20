@@ -37,6 +37,8 @@ import com.pawelwywiol.minervahelper.data.catalog.Favourites
 import com.pawelwywiol.minervahelper.data.placement.Destinations
 import com.pawelwywiol.minervahelper.data.settings.Setup
 import com.pawelwywiol.minervahelper.data.queue.DownloadQueue
+import com.pawelwywiol.minervahelper.data.queue.DownloadState
+import com.pawelwywiol.minervahelper.work.DownloadWorker
 import com.pawelwywiol.minervahelper.ui.catalog.CollectionsScreen
 import com.pawelwywiol.minervahelper.ui.catalog.FavouritesScreen
 import com.pawelwywiol.minervahelper.ui.catalog.PlatformsScreen
@@ -73,6 +75,15 @@ fun MinervaNavHost() {
 
     val entry by navController.currentBackStackEntryAsState()
     val route = entry?.destination?.route
+
+    // The queue looks after itself (R36): anything still waiting when the app opens is picked up
+    // without the user having to find a button.
+    LaunchedEffect(Unit) {
+        val waiting = withContext(Dispatchers.IO) {
+            queue.all().any { it.state == DownloadState.QUEUED }
+        }
+        if (waiting && destinations.root != null) DownloadWorker.enqueue(context)
+    }
 
     Scaffold(
         bottomBar = {

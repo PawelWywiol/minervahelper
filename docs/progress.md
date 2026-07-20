@@ -7,6 +7,69 @@ unresolved. Claims without measurements do not belong here.
 
 ---
 
+## 2026-07-20 — M7 identity and guidance: the app looks like a product now
+
+The last two M7 packages, both tested on the connected device.
+
+**Identity.** One dark colour scheme built for the handheld ([D17](decisions.md#d17))
+replaces the template purple: near-black background, amber for the one action that
+matters on each screen, green reserved for "you have this", red for errors. List rows
+are separated by hairline dividers and given room to breathe. The active download shows
+a real progress bar — captured live on the device while a 496 kB file came down from
+the "MAME - ROMs (merged)" torrent (a swarm not tried before — it has seeds and
+delivered in seconds; payload uploaded 0 B, as every run).
+
+**Guidance.** Folder rows carry an edit icon, so "you can tap this" is visible instead
+of secret. Removing a queued game now asks "Remove from queue?" instead of firing on a
+bare tap — the dialog was exercised on the device (Cancel left the item downloading; it
+finished and moved to Downloaded on its own). Queue, search and favourites explain
+themselves when empty, and the queue's hint says plainly that downloads start by
+themselves.
+
+Screens verified by screenshot on the device: collections, platform list, game list
+with details pane, search with downloaded markers, queue with the Downloaded section,
+settings with edit icons. A second new swarm also proved live along the way: the
+FinalBurn Neo torrent (58 kB game, downloaded and placed while the confirmation dialog
+was open).
+
+**M7 is now complete in code and tested screen by screen.** What remains is the part
+no test can claim: the owner using it on the couch. The "done when" for M7 — a
+first-timer finds, downloads and knows it succeeded, by touch alone and by D-pad
+alone — is ready for that judgment.
+
+## 2026-07-20 — M7 behaviour: the queue takes care of itself
+
+The second M7 package is done and tested on the connected device. R36–R39 all work:
+
+- **Adding a game starts its download** (R36). Tested live: a game was added from
+  the search screen with no "Download" button anywhere — the worker started on its
+  own, fetched the 1,867-byte file from the 305k-file MAME torrent and placed it in
+  `arcade/`. Payload uploaded: 0 B, as always. Anything still queued when the app
+  opens is also picked up automatically.
+- **Finished downloads leave the queue** (R37) and appear in a "Downloaded" section
+  on the queue screen, with the folder they went to. The queue database migrates old
+  finished rows there on first launch (verified: the three old test entries moved).
+- **Lists mark what is downloaded** (R37): browse, search and favourites rows show
+  "✓ downloaded"; the details pane shows a badge and offers "Download again".
+- **A file already in the destination counts as downloaded** (R38). Tested: a file
+  matching name and size was put in the destination folder, then "Download" pressed —
+  it was recorded as downloaded instantly, nothing was queued, nothing transferred.
+- **Changing a folder asks about existing files** (R39). Renaming the mame folder
+  from `arcade` to `arcade2` raised "Move 2 downloaded files from arcade to arcade2,
+  or leave them where they are?" — "Move files" physically moved the file on the
+  SD card and updated the record; tested in both directions. The same question is
+  asked before the root folder changes.
+
+Also: the queue's manual "Download" button is gone; "Retry failed" restarts the
+worker itself; download runs are chained (`APPEND_OR_REPLACE`) so adding a game
+never kills a download already running, and failed items wait for an explicit retry
+instead of re-downloading on every run.
+
+**Not yet covered:** moving files runs while the settings screen is open (a very
+large library move could be interrupted by leaving the screen); the "Downloaded"
+list on the queue screen will grow unbounded — pruning or a dedicated history
+screen belongs to the remaining M7 packages.
+
 ## 2026-07-20 — M7 structure: the app now has real navigation
 
 The first M7 package (structure) is done and tested on the connected device:

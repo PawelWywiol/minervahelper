@@ -26,6 +26,15 @@ data class QueueItem(
     val error: String?,
 )
 
+data class DownloadedItem(
+    val id: Long,
+    val name: String,
+    val size: Long,
+    val collection: String,
+    val platformKey: String,
+    val folder: String,
+)
+
 /**
  * The queue doubles as the selection basket: a ROM the user picked and a ROM waiting to download are
  * the same thing, and keeping two lists in step would only invite them to disagree.
@@ -34,7 +43,7 @@ data class QueueItem(
  */
 class DownloadQueue(context: Context) {
 
-    private val helper = object : SQLiteOpenHelper(context, "queue.db", null, 2) {
+    private val helper = object : SQLiteOpenHelper(context, "queue.db", null, 3) {
         override fun onCreate(db: SQLiteDatabase) {
             db.execSQL(
                 "CREATE TABLE item(" +
@@ -44,12 +53,26 @@ class DownloadQueue(context: Context) {
                     "error TEXT, added_at INTEGER NOT NULL)"
             )
             db.execSQL("CREATE UNIQUE INDEX ux_item ON item(torrent_path, so_id)")
+            db.execSQL(DOWNLOADED_TABLE)
+            db.execSQL(DOWNLOADED_INDEX)
         }
 
         // Migrated rather than recreated: the table holds what the user picked, and dropping it
         // would silently empty their queue on an app update.
         override fun onUpgrade(db: SQLiteDatabase, old: Int, new: Int) {
             if (old < 2) db.execSQL("ALTER TABLE item ADD COLUMN error TEXT")
+            if (old < 3) {
+                db.execSQL(DOWNLOADED_TABLE)
+                db.execSQL(DOWNLOADED_INDEX)
+                // Finished items used to linger in the queue; they belong in the downloaded record.
+                // Their folder was never stored, so it stays blank for these.
+                db.execSQL(
+                    "INSERT INTO downloaded(name, size, collection, platform_key, torrent_path, so_id, folder, completed_at) " +
+                        "SELECT name, size, collection, platform_key, torrent_path, so_id, '', added_at " +
+                        "FROM item WHERE state = '${DownloadState.DONE.name}'"
+                )
+                db.execSQL("DELETE FROM item WHERE state = '${DownloadState.DONE.name}'")
+            }
         }
     }
 
@@ -83,7 +106,8 @@ class DownloadQueue(context: Context) {
             arrayOf(rom.torrentPath, rom.soId.toString()),
         ).use { it.moveToFirst() }
 
-    fun toggle(rom: CatalogReader.Rom) {
+    /** Returns true when the ROM was added — the caller starts the download then (R36). */
+    fun toggle(rom: CatalogReader.Rom): Boolean {
         val db = helper.writableDatabase
         val removed = db.delete(
             "item", "torrent_path = ? AND so_id = ?",
@@ -91,6 +115,95 @@ class DownloadQueue(context: Context) {
         )
         if (removed == 0) db.insert("item", null, rom.toValues())
         revision++
+        return removed == 0
+    }
+
+    /** A finished download leaves the queue and becomes a downloaded record (R37). */
+    fun markDownloaded(item: QueueItem, folder: String) {
+        val db = helper.writableDatabase
+        db.beginTransaction()
+        try {
+            db.insertWithOnConflict(
+                "downloaded", null,
+                downloadedValues(item.name, item.size, item.collection, item.platformKey, item.torrentPath, item.soId, folder),
+                SQLiteDatabase.CONFLICT_REPLACE,
+            )
+            db.delete("item", "id = ?", arrayOf(item.id.toString()))
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
+        }
+        revision++
+    }
+
+    /** A file already sitting in the destination counts as downloaded, without queueing (R38). */
+    fun recordDownloaded(rom: CatalogReader.Rom, folder: String) {
+        helper.writableDatabase.insertWithOnConflict(
+            "downloaded", null,
+            downloadedValues(rom.name, rom.size, rom.collection, rom.platformKey, rom.torrentPath, rom.soId, folder),
+            SQLiteDatabase.CONFLICT_REPLACE,
+        )
+        revision++
+    }
+
+    fun isDownloaded(rom: CatalogReader.Rom): Boolean =
+        helper.readableDatabase.rawQuery(
+            "SELECT 1 FROM downloaded WHERE torrent_path = ? AND so_id = ?",
+            arrayOf(rom.torrentPath, rom.soId.toString()),
+        ).use { it.moveToFirst() }
+
+    /** For marking browse lists; keys built with [downloadedKey]. */
+    fun downloadedKeys(): Set<String> =
+        helper.readableDatabase.rawQuery("SELECT torrent_path, so_id FROM downloaded", null).use { c ->
+            buildSet { while (c.moveToNext()) add(downloadedKey(c.getString(0), c.getInt(1))) }
+        }
+
+    fun downloaded(): List<DownloadedItem> =
+        helper.readableDatabase.rawQuery(
+            "SELECT id, name, size, collection, platform_key, folder FROM downloaded ORDER BY completed_at DESC, id DESC",
+            null,
+        ).use { c ->
+            buildList {
+                while (c.moveToNext()) {
+                    add(
+                        DownloadedItem(
+                            id = c.getLong(0),
+                            name = c.getString(1),
+                            size = c.getLong(2),
+                            collection = c.getString(3),
+                            platformKey = c.getString(4),
+                            folder = c.getString(5),
+                        )
+                    )
+                }
+            }
+        }
+
+    fun setDownloadedFolder(id: Long, folder: String) {
+        helper.writableDatabase.execSQL(
+            "UPDATE downloaded SET folder = ? WHERE id = ?",
+            arrayOf<Any>(folder, id),
+        )
+        revision++
+    }
+
+    private fun downloadedValues(
+        name: String,
+        size: Long,
+        collection: String,
+        platformKey: String,
+        torrentPath: String,
+        soId: Int,
+        folder: String,
+    ) = ContentValues().apply {
+        put("name", name)
+        put("size", size)
+        put("collection", collection)
+        put("platform_key", platformKey)
+        put("torrent_path", torrentPath)
+        put("so_id", soId)
+        put("folder", folder)
+        put("completed_at", System.currentTimeMillis())
     }
 
     fun remove(id: Long) {
@@ -160,6 +273,18 @@ class DownloadQueue(context: Context) {
             instance ?: synchronized(this) {
                 instance ?: DownloadQueue(context.applicationContext).also { instance = it }
             }
+
+        fun downloadedKey(torrentPath: String, soId: Int) = "$torrentPath $soId"
+
+        fun downloadedKey(rom: CatalogReader.Rom) = downloadedKey(rom.torrentPath, rom.soId)
+
+        private const val DOWNLOADED_TABLE =
+            "CREATE TABLE downloaded(" +
+                "id INTEGER PRIMARY KEY, name TEXT NOT NULL, size INTEGER NOT NULL," +
+                "collection TEXT NOT NULL, platform_key TEXT NOT NULL, torrent_path TEXT NOT NULL," +
+                "so_id INTEGER NOT NULL, folder TEXT NOT NULL, completed_at INTEGER NOT NULL)"
+        private const val DOWNLOADED_INDEX =
+            "CREATE UNIQUE INDEX ux_downloaded ON downloaded(torrent_path, so_id)"
     }
 
     private fun CatalogReader.Rom.toValues() = ContentValues().apply {

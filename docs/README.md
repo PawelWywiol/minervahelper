@@ -22,7 +22,9 @@ First time here? Start with [project.md](project.md).
 ## Project status in one sentence
 
 The core works end-to-end on the device — browse, search, queue, selective torrent
-download, verification, placement into per-platform folders. Next up: **M7 — the
-user experience overhaul** ([design.md](design.md)); loose ends remain in M2–M6.
+download, verification, placement into per-platform folders — and after **M7**
+([design.md](design.md)) it navigates, behaves and looks like a finished product:
+persistent menu, automatic queue, downloaded markers, dark identity. Loose ends
+remain in M2–M6; the owner's device-in-hand acceptance of M7 is pending.
 
 Details in [roadmap.md](roadmap.md) and [progress.md](progress.md).

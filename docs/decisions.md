@@ -289,3 +289,20 @@ rename the folder, and the app remembers it.
 
 **Cost:** the default is sometimes wrong, so the screen has to admit which names are
 guesses rather than presenting all of them with equal confidence.
+
+---
+
+<a id="d17"></a>
+## D17 — Dark-first, one amber accent, green only for "you have this"
+
+**Decision:** the app ships one dark colour scheme designed for the handheld, replacing
+the template's light purple. Amber marks the single primary action on each screen; green
+is reserved for the downloaded state; red for errors. No light theme for now.
+
+**Why:** the app lives between launchers and emulators that are all dark — next to them
+a white screen with purple buttons read as a template demo, which the owner's review
+called out. One accent keeps the eye on the action that matters; a green that means only
+"downloaded" makes the markers scannable at a glance.
+
+**Cost:** users who prefer light themes have no option yet. Added only if asked (see the
+roadmap's open questions).

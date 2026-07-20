@@ -16,7 +16,7 @@ Last updated: 2026-07-20
 | **M4** | File placement, verification, platform mapping | 🟡 |
 | **M5** | Onboarding, settings, battery | 🟡 |
 | **M6** | Hardening and release | 🟡 |
-| **M7** | **User experience overhaul** — navigation, automatic queue, visual identity | ⬜ **next** |
+| **M7** | **User experience overhaul** — navigation, automatic queue, visual identity | ✅ **done** — owner's device-in-hand acceptance pending |
 
 ---
 
@@ -133,15 +133,16 @@ Four packages, in order — structure before paint:
       release; use the landscape screen instead of one left-pinned column —
       done and tested on the device 2026-07-20; game lists now show a list +
       details side by side
-- [ ] **Behaviour:** downloads start automatically on queueing (R36); finished items
+- [x] **Behaviour:** downloads start automatically on queueing (R36); finished items
       leave the queue and browse lists mark what is downloaded (R37); files already
       in the destination count as downloaded (R38); folder change offers to move
-      existing files (R39)
-- [ ] **Identity:** dark-first colour scheme for a gaming handheld, list rows with
-      separation, icons and status badges, real progress bars, typographic hierarchy
-- [ ] **Guidance:** everything tappable looks tappable (folder rows especially);
-      destructive actions confirmed or undoable (queue's tap-to-delete must go);
-      one line of help where a first-timer needs it; friendly empty states
+      existing files (R39) — all four done and tested on the device 2026-07-20
+- [x] **Identity:** dark-first colour scheme for a gaming handheld ([D17](decisions.md#d17)),
+      list rows with separation, downloaded/error badges, a real progress bar on the
+      active download — done and tested on the device 2026-07-20
+- [x] **Guidance:** folder rows carry an edit icon; removing from the queue asks for
+      confirmation instead of firing on a bare tap; every main screen has one line of
+      help; friendly empty states — done and tested on the device 2026-07-20
 
 **Done when:** a person who has never seen the app finds a game, downloads it and
 knows it succeeded — without instructions, by touch alone; and the same flow works
