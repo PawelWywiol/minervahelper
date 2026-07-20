@@ -27,7 +27,9 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.focus.FocusRequester
+import com.pawelwywiol.minervahelper.spike.CatalogSpike
 import com.pawelwywiol.minervahelper.spike.TorrentSpike
+import com.pawelwywiol.minervahelper.work.CatalogSyncWorker
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -83,6 +85,32 @@ private fun SpikeScreen() {
             }
         ) {
             Text(if (running) "Running…" else "Run M0 torrent spike")
+        }
+
+        Button(
+            enabled = !running,
+            onClick = {
+                running = true
+                lines.clear()
+                scope.launch {
+                    runCatching {
+                        CatalogSpike.run(context) { line ->
+                            Log.i(SPIKE_TAG, line)
+                            lines += line
+                        }
+                    }.onFailure {
+                        Log.e(SPIKE_TAG, "CATALOG SPIKE FAILED", it)
+                        lines += "FAILED: ${it::class.simpleName}: ${it.message}"
+                    }
+                    running = false
+                }
+            }
+        ) {
+            Text("Run M1 catalog import")
+        }
+
+        Button(onClick = { CatalogSyncWorker.enqueue(context) }) {
+            Text("Enqueue M1 sync worker")
         }
 
         LazyColumn(state = listState, modifier = Modifier.padding(top = 16.dp)) {
