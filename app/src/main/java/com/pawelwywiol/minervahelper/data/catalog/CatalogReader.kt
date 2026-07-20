@@ -80,6 +80,9 @@ class CatalogReader(file: File) : Closeable {
         )
     }
 
+    fun rom(id: Long): Rom? =
+        roms("FROM file f", "f.id = ?", arrayOf(id.toString()), limit = 1, offset = 0).firstOrNull()
+
     fun count(): Long =
         db.rawQuery("SELECT count(*) FROM file", null).use { if (it.moveToFirst()) it.getLong(0) else 0L }
 

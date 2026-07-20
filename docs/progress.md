@@ -7,6 +7,39 @@ unresolved. Claims without measurements do not belong here.
 
 ---
 
+## 2026-07-20 — The app can be browsed and searched
+
+The first real screens replaced the developer test screen: a list of collections,
+the platforms inside one, the ROMs inside a platform, a detail view for a single
+ROM, and a search box. The developer screen is still reachable, one button away.
+
+**Tested on the device, driven entirely by the gamepad:** opening a collection,
+opening a platform, scrolling, opening a ROM. Search was typed in and returned
+results while typing. No crashes.
+
+| Measure | Result |
+|---|---|
+| Scrolling MAME (753,442 entries), 1,028 frames | **1 dropped frame** (0.1%) |
+| Slowest 1% of frames | 13 ms — under the 16 ms budget for smooth motion |
+| Memory after scrolling through ~2,000 entries | 18 MB |
+
+**A mistake worth recording.** On first launch the app jumped straight to the
+developer screen, as if no catalogue existed — the catalogue was there. The check
+treated "still loading" as "not present". Loading a 521 MB file is not instant, so
+those two states must be distinguished; they now are.
+
+**A second one.** Nothing on screen could be activated with the gamepad, even though
+the same buttons had worked before. The request to highlight the first row was being
+made before that row existed, and the failure was being silently discarded. The
+highlight is now requested from inside the row itself, and the error is no longer
+swallowed — hiding it was what made this take a second attempt.
+
+**Known limitation:** the list keeps every row it has loaded, so scrolling extremely
+far grows memory without bound. Not reachable in normal use — 2,000 rows cost 18 MB
+— but it is a real ceiling and is on the roadmap.
+
+---
+
 ## 2026-07-20 — Catalogue rebuilt so browsing is fast
 
 **The problem:** before building the browsing screens, the catalogue was tested for

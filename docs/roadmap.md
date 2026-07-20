@@ -52,11 +52,14 @@ matched, 2 seconds. Details in [progress.md](progress.md).
 - [x] **Fix gamepad navigation** — a focused button did not respond to the action
       button (found in M0). Cause: the handheld sends a gamepad button code that
       Android does not treat as "confirm". Fixed and tested on the device.
-- [ ] Browse by collection and platform
-- [ ] Search screen wired to the catalogue
-- [ ] ROM detail screen
+- [x] Browse by collection and platform
+- [x] Search screen wired to the catalogue
+- [x] ROM detail screen
+- [x] Smooth scrolling over large lists (the biggest platform has 753k entries) —
+      measured on the device: 1 dropped frame out of 1,028
 - [ ] Favourites
-- [ ] Smooth scrolling over large lists (the biggest platform has 647k entries)
+- [ ] Release memory when scrolling very far (the list currently keeps every row it
+      has loaded)
 
 **Done when:** the whole app can be operated with the gamepad alone, and long
 lists scroll without stutter.
