@@ -6,7 +6,8 @@ import java.io.File
 
 /**
  * One-shot catalog bootstrap: fetch upstream hashes.db, normalize it into catalog.db,
- * then drop the 1.64 GB source. Both steps resume after interruption.
+ * then drop the 1.64 GB source. The download resumes after interruption; the import
+ * restarts from scratch (see CatalogImporter).
  */
 class CatalogSync(
     private val context: Context,

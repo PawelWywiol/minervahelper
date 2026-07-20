@@ -56,7 +56,7 @@ object TorrentSpike {
         log("downloaded ${downloaded.length()} B, md5=$md5")
         check(md5 == TARGET_MD5) { "md5 mismatch: expected $TARGET_MD5" }
 
-        // spike.torrent + pobrany ROM + .<infohash>.parts (brzegowe piece'y wspoldzielone z pominietymi plikami)
+        // spike.torrent + the ROM + .<infohash>.parts (boundary pieces shared with skipped files)
         val onDisk = workDir.walkTopDown().filter { it.isFile }.toList()
         log("files written: ${onDisk.size} -> ${onDisk.joinToString { it.name }}")
         check(onDisk.size == 3) { "selective download wrote unexpected files" }
@@ -86,8 +86,8 @@ object TorrentSpike {
         try {
             session.start(SessionParams(SettingsPack().apply {
                 downloadRateLimit(0)
-                // NIE dławić uploadu do ~0: limit obejmuje narzut protokolu (requesty, bitfield),
-                // wiec klient przestaje pobierac. "Bez seedowania" = stop po zakonczeniu, nie throttling.
+                // Do NOT throttle upload to ~0: the limit covers protocol overhead (requests,
+                // bitfield), so the client stops downloading. No seeding = stop when finished.
                 uploadRateLimit(0)
                 activeDownloads(1)
             }))

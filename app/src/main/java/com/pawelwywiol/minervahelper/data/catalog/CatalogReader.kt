@@ -4,7 +4,6 @@ import android.database.sqlite.SQLiteDatabase
 import java.io.Closeable
 import java.io.File
 
-/** Read-only access to the normalized catalog. */
 class CatalogReader(file: File) : Closeable {
 
     data class Rom(
