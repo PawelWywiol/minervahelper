@@ -12,7 +12,7 @@ Last updated: 2026-07-20
 | **M0** | Project skeleton + proving the risky path | ✅ **done** |
 | **M1** | Catalogue: download, conversion, search | ✅ **done** |
 | **M2** | Interface: browsing, search, details, favourites | 🔨 in progress |
-| **M3** | Download queue and engine | ⬜ |
+| **M3** | Download queue and engine | 🔨 in progress |
 | **M4** | File placement, verification, platform mapping | ⬜ |
 | **M5** | Onboarding, settings, battery | ⬜ |
 | **M6** | Hardening and release | ⬜ |
@@ -66,15 +66,16 @@ matched, 2 seconds. Details in [progress.md](progress.md).
 **Done when:** the whole app can be operated with the gamepad alone, and long
 lists scroll without stutter.
 
-## ⬜ M3 — Download queue and engine
+## 🔨 M3 — Download queue and engine (in progress)
 
-- [ ] Selection basket for multiple ROMs
-- [ ] Group selections by torrent
+- [x] Selection basket for multiple ROMs — the queue *is* the basket
+- [x] Group selections by torrent
 - [ ] Download worker with pause / resume / cancel
 - [ ] Survive app closure and device reboot
 - [ ] Ship a tracker list (R33)
 - [ ] Transfer limits
-- [ ] Live statistics: speed, progress, queue size, free space (R35)
+- [ ] Live statistics: speed, progress, queue size, free space (R35) — queue size
+      and free space done, speed and progress need the engine
 
 **Done when:** three ROMs from one torrent plus one from another all land correctly,
 the queue survives being killed and rebooted, and the user can see at a glance what

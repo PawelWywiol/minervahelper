@@ -7,6 +7,34 @@ unresolved. Claims without measurements do not belong here.
 
 ---
 
+## 2026-07-20 — M3 started: a download queue you can fill up
+
+ROMs can now be added to a download queue from their detail screen, and the queue
+screen shows what is in it. Nothing downloads yet — that is the next step.
+
+The queue groups its contents **by torrent**, because that is how the files will be
+fetched: one torrent is opened once and every wanted file inside it is picked up
+together, rather than opening the same torrent once per ROM.
+
+It also shows how much the queue will take and how much space is left, and says
+plainly when it will not fit — part of requirement R35.
+
+**Tested on the device:** two ROMs from two different torrents added, shown under
+their own torrent headings with a correct total; the app was killed and reopened and
+the queue was intact; removing an item updated the totals immediately.
+
+| State | Shown |
+|---|---|
+| Empty | 0 ROMs · 0 B · 0 torrents · 105.9 GB free |
+| Two ROMs, two torrents | 2 ROMs · 72.8 MB · 2 torrents |
+| After removing one | 1 ROM · 75 kB · 1 torrent |
+
+**A simplification worth naming:** there is no separate "basket". A ROM the user has
+picked and a ROM waiting to download are the same thing, and keeping two lists in
+step would only give them a chance to disagree. The queue is the basket.
+
+---
+
 ## 2026-07-20 — Favourites
 
 A ROM can be marked as a favourite from its detail screen, and the favourites list

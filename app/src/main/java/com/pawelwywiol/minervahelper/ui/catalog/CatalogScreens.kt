@@ -34,6 +34,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.pawelwywiol.minervahelper.data.catalog.CatalogReader
 import com.pawelwywiol.minervahelper.data.catalog.Favourites
+import com.pawelwywiol.minervahelper.data.queue.DownloadQueue
+import com.pawelwywiol.minervahelper.ui.FocusableRow
+import com.pawelwywiol.minervahelper.ui.FocusedList
+import com.pawelwywiol.minervahelper.ui.Screen
+import com.pawelwywiol.minervahelper.ui.formatCount
+import com.pawelwywiol.minervahelper.ui.formatSize
+import com.pawelwywiol.minervahelper.ui.initialFocus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
@@ -47,6 +54,7 @@ fun CollectionsScreen(
     onOpen: (String) -> Unit,
     onSearch: () -> Unit,
     onFavourites: () -> Unit,
+    onQueue: () -> Unit,
     onDeveloper: () -> Unit,
 ) {
     var collections by remember { mutableStateOf<List<CatalogReader.Collection>>(emptyList()) }
@@ -57,6 +65,8 @@ fun CollectionsScreen(
             Button(onClick = onSearch) { Text("Search") }
             Spacer(Modifier.width(8.dp))
             Button(onClick = onFavourites) { Text("Favourites") }
+            Spacer(Modifier.width(8.dp))
+            Button(onClick = onQueue) { Text("Queue") }
             Spacer(Modifier.width(8.dp))
             Button(onClick = onDeveloper) { Text("Dev") }
         }
@@ -176,18 +186,28 @@ fun FavouritesScreen(
 }
 
 @Composable
-fun RomDetailScreen(reader: CatalogReader, favourites: Favourites, romId: Long) {
+fun RomDetailScreen(
+    reader: CatalogReader,
+    favourites: Favourites,
+    queue: DownloadQueue,
+    romId: Long,
+) {
     var rom by remember { mutableStateOf<CatalogReader.Rom?>(null) }
     LaunchedEffect(romId) { rom = withContext(Dispatchers.IO) { reader.rom(romId) } }
 
     Screen(rom?.name ?: "…") {
         rom?.let {
+            val inQueue = remember(queue.revision, it.id) { queue.contains(it) }
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                 Button(
                     onClick = { favourites.toggle(it) },
                     modifier = Modifier.initialFocus(true),
                 ) {
                     Text(if (favourites.contains(it)) "Remove from favourites" else "Add to favourites")
+                }
+                Spacer(Modifier.height(8.dp))
+                Button(onClick = { queue.toggle(it) }) {
+                    Text(if (inQueue) "Remove from queue" else "Add to queue")
                 }
                 Spacer(Modifier.height(16.dp))
                 Detail("Platform", "${it.collection}/${it.platformKey}")
@@ -205,58 +225,4 @@ private fun Detail(label: String, value: String) {
     Text(label, style = MaterialTheme.typography.labelMedium)
     Text(value, style = MaterialTheme.typography.bodyMedium)
     Spacer(Modifier.height(12.dp))
-}
-
-@Composable
-private fun Screen(title: String, content: @Composable ColumnScope.() -> Unit) {
-    Column(modifier = Modifier.fillMaxSize().padding(vertical = 12.dp)) {
-        Text(
-            title,
-            style = MaterialTheme.typography.headlineSmall,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-        )
-        content()
-    }
-}
-
-@Composable
-private fun <T> FocusedList(items: List<T>, row: @Composable (T, Modifier) -> Unit) {
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
-        itemsIndexed(items) { index, item -> row(item, Modifier.initialFocus(index == 0)) }
-    }
-}
-
-/**
- * The requester has to sit on the same node as the row's own focus target, and the request has to
- * come from inside that row's composition — asking from the list before its first item exists fails
- * silently and leaves the screen unreachable by gamepad.
- */
-@Composable
-private fun Modifier.initialFocus(enabled: Boolean): Modifier {
-    if (!enabled) return this
-    val requester = remember { FocusRequester() }
-    LaunchedEffect(Unit) { requester.requestFocus() }
-    return focusRequester(requester)
-}
-
-/**
- * The handheld has no pointer, so the focused row is the only cue about what the action button will
- * open — it has to be visible without looking for it.
- */
-@Composable
-private fun FocusableRow(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    content: @Composable ColumnScope.() -> Unit,
-) {
-    var focused by remember { mutableStateOf(false) }
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .onFocusChanged { focused = it.isFocused }
-            .background(if (focused) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 10.dp),
-        content = content,
-    )
 }

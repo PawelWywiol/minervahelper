@@ -30,13 +30,3 @@ class RomPager(private val reader: CatalogReader, private val platformId: Long) 
         }
     }
 }
-
-fun formatSize(bytes: Long): String = when {
-    bytes >= 1_000_000_000 -> "%.1f GB".format(bytes / 1e9)
-    bytes >= 1_000_000 -> "%.1f MB".format(bytes / 1e6)
-    bytes >= 1_000 -> "${bytes / 1_000} kB"
-    else -> "$bytes B"
-}
-
-fun formatCount(count: Long): String =
-    count.toString().reversed().chunked(3).joinToString(" ").reversed()
