@@ -7,6 +7,38 @@ unresolved. Claims without measurements do not belong here.
 
 ---
 
+## 2026-07-20 — The shrunk release build works, torrent engine included
+
+Release builds strip out code that looks unused. The torrent engine is reached through
+a native library rather than ordinary Kotlin calls, which is exactly the pattern that
+gets stripped by mistake — and the failure would only show up on a real download, after
+release. So it was tested properly rather than assumed.
+
+**Result: the shrunk build downloads, verifies and places a ROM correctly.** Measured
+on the device with shrinking on:
+
+| | |
+|---|---|
+| `Fantasian (1985)(Xtal Soft)(JP)…zip` | 22,727,819 B, 3 seeds |
+| MD5 | matched the archive |
+| Landed in | `/sdcard/Download/x1/` |
+| File content shared | 0 B |
+| Staging afterwards | removed |
+
+**Size.** 43.3 MB unshrunk → 34.4 MB shrunk. Most of the app is the 15.9 MB torrent
+library for two processor types, which cannot be shrunk.
+
+**How it was tested.** The release build normally installs as a separate app with an
+empty catalogue, and importing 1.6 GB just to test it would be absurd. Instead the
+shrunk build was temporarily given the development app's name so it took over the
+existing catalogue, queue and folder permission. That change to the build file has been
+reverted, and the ordinary development build reinstalled and confirmed running.
+
+**Not proven by this:** the app is signed with a development key. A real release needs a
+proper signing key, which is the owner's to create and keep.
+
+---
+
 ## 2026-07-20 — Losing Wi-Fi mid-download turns out to be a pause, not a failure
 
 Tested for real: a 54.5 MB download was started and the device's Wi-Fi was switched

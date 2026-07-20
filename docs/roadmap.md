@@ -114,7 +114,8 @@ entirely on the device.
 - [x] Free-space check before a torrent starts
 - [ ] Edge cases: a 305k-file torrent, zero-byte files
 - [x] Network loss during download — tested; it pauses and resumes by itself
-- [ ] Release build with code shrinking
+- [x] Release build with code shrinking — tested on device, torrent path intact
+- [ ] Real signing key (owner's to create)
 - [ ] Versioned catalogue re-import (R34)
 
 ---
