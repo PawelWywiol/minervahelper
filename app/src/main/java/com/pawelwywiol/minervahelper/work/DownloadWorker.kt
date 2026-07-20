@@ -14,6 +14,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.pawelwywiol.minervahelper.data.download.SelectiveDownloader
 import com.pawelwywiol.minervahelper.data.download.TorrentCache
+import com.pawelwywiol.minervahelper.data.download.loadTorrentInfo
 import com.pawelwywiol.minervahelper.data.download.md5
 import com.pawelwywiol.minervahelper.data.queue.DownloadQueue
 import com.pawelwywiol.minervahelper.data.queue.DownloadState
@@ -22,7 +23,6 @@ import com.pawelwywiol.minervahelper.data.placement.FilePlacement
 import com.pawelwywiol.minervahelper.data.queue.QueueItem
 import kotlinx.coroutines.CancellationException
 import okhttp3.OkHttpClient
-import org.libtorrent4j.TorrentInfo
 import com.pawelwywiol.minervahelper.ui.formatSize
 import java.io.File
 import java.io.IOException
@@ -99,7 +99,7 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
                 "shared ${result.payloadUploaded} bytes of file content — non-sharing guarantee broken"
             }
 
-            val info = TorrentInfo(torrent)
+            val info = loadTorrentInfo(torrent)
             items.forEach { verifyAndPlace(it, File(stagingDir, info.files().filePath(it.soId))) }
             // libtorrent leaves a .parts scratch file and the torrent's directory tree behind. They
             // are dead once the wanted files are placed, and nothing else clears them — measured at

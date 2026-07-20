@@ -75,8 +75,9 @@ lists scroll without stutter.
 - [x] Prove the non-sharing rule: 0 bytes of file content sent, checked every run
 - [x] Survive app closure — killed mid-download, resumed by itself on reopening
 - [ ] Survive a device reboot (not yet tested — needs the handheld restarted)
-- [ ] Find out why the large MAME torrent found no peers; two other torrents work,
-      so it is that swarm or that torrent, not the engine
+- [x] The large MAME torrent question is settled: the "Software List CHDs (merged)"
+      swarm simply has no seeds (measured twice, 5 minutes each), while the even
+      bigger "MAME - EXTRAs" torrent downloads fine — it is that swarm, not the engine
 - [ ] Ship a tracker list (R33)
 - [ ] Transfer limits
 - [x] Live statistics: speed, progress, queue size, free space (R35)
@@ -112,7 +113,9 @@ entirely on the device.
 
 - [x] Clear error messages, with a way back (retry)
 - [x] Free-space check before a torrent starts
-- [ ] Edge cases: a 305k-file torrent, zero-byte files
+- [x] Edge cases: a 305k-file torrent, zero-byte files — both download correctly;
+      the torrent library's metadata parser needed its safety caps raised for the
+      27 MB torrent file
 - [x] Network loss during download — tested; it pauses and resumes by itself
 - [x] Release build with code shrinking — tested on device, torrent path intact
 - [ ] Real signing key (owner's to create)

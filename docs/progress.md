@@ -7,6 +7,36 @@ unresolved. Claims without measurements do not belong here.
 
 ---
 
+## 2026-07-20 — Edge cases: the 305,150-file torrent and zero-byte files
+
+Two edge cases from the hardening list, both tested on the device.
+
+**The biggest torrent in the archive was impossible to download — now fixed.**
+"MAME - EXTRAs" holds 305,150 files described by 27.4 MB of torrent metadata. The
+torrent library's parser refuses metadata that big out of caution ("bencoded item count
+limit exceeded"), so every download from that torrent failed before it began. The
+parser's safety caps are now raised to fit this archive. A 10 kB file picked out of
+those 305,150 was then downloaded, verified and placed in `arcade/` — checksum matched,
+0 bytes of file content shared, and the whole app used ~181 MB of memory at the worst
+moment, well within what the device has.
+
+A side discovery: this torrent **does** have a seed — the download ran at over
+1 MB/s. The earlier note that "the large MAME torrent finds no peers" was either a
+different torrent or a temporary state, and with the parser fixed it can now actually
+be retried like any other.
+
+**Zero-byte files work.** The catalogue lists 166 files of size zero (mostly empty
+placeholders the archive mirrors faithfully). Two were downloaded — one alongside a
+normal file, one entirely on its own. Both completed, matched the empty-file checksum,
+and were placed. The lone zero-byte download finished in under a second without
+waiting on any peer, which was the case worth checking: a download of zero wanted
+bytes could plausibly have hung until the five-minute stall alarm.
+
+**Measured:** `ddrstraw.png` 10,000 B from the 305k-file torrent, MD5
+`5b54fef2...` matched; two empty `.chd` files placed with the empty-file MD5
+`d41d8cd9...`; payload uploaded 0 B on every run; staging directory cleaned after
+each group.
+
 ## 2026-07-20 — The app can now tell when its list of games is out of date
 
 The catalogue was imported once and never looked at again. The archive keeps changing,

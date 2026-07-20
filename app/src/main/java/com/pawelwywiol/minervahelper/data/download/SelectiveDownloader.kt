@@ -11,8 +11,12 @@ import org.libtorrent4j.SessionManager
 import org.libtorrent4j.SessionParams
 import org.libtorrent4j.SettingsPack
 import org.libtorrent4j.TorrentInfo
+import org.libtorrent4j.swig.add_torrent_params
+import org.libtorrent4j.swig.error_code
+import org.libtorrent4j.swig.load_torrent_limits
 import org.libtorrent4j.swig.settings_pack
 import org.libtorrent4j.swig.torrent_flags_t
+import org.libtorrent4j.swig.torrent_info
 import java.io.File
 import java.net.URLEncoder
 import java.security.MessageDigest
@@ -87,7 +91,7 @@ class SelectiveDownloader {
         targetDir: File,
         onProgress: suspend (Progress) -> Unit,
     ): Result = withContext(Dispatchers.IO) {
-        val info = TorrentInfo(torrent)
+        val info = loadTorrentInfo(torrent)
         val wanted = soIds.filter { it in 0 until info.numFiles() }.toSet()
         require(wanted.isNotEmpty()) { "no valid file indexes for ${torrent.name}" }
 
@@ -149,6 +153,23 @@ class SelectiveDownloader {
         setBoolean(settings_pack.bool_types.enable_incoming_utp.swigValue(), false)
         setInteger(settings_pack.int_types.unchoke_slots_limit.swigValue(), 0)
     }
+}
+
+/**
+ * [TorrentInfo]'s own parser rejects this archive's biggest torrents — 27 MB of metadata and
+ * 305k files exceed its built-in bencode caps ("item count limit exceeded"). These limits are
+ * sanity bounds checked during parsing, not allocations. The parsed torrent_info is copied
+ * because add_torrent_params owns the original and would free it when garbage collected.
+ */
+fun loadTorrentInfo(torrent: File): TorrentInfo {
+    val limits = load_torrent_limits().apply {
+        max_buffer_size = 256 * 1024 * 1024
+        max_decode_tokens = 50_000_000
+    }
+    val ec = error_code()
+    val params = add_torrent_params.load_torrent_file(torrent.absolutePath, ec, limits)
+    check(ec.value() == 0) { "cannot parse ${torrent.name}: ${ec.message()}" }
+    return TorrentInfo(torrent_info(params.ti_ptr()))
 }
 
 fun File.md5(): String {
