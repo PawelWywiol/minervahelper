@@ -7,6 +7,35 @@ unresolved. Claims without measurements do not belong here.
 
 ---
 
+## 2026-07-20 — Live progress, and the queue survives being killed
+
+Three things were added and checked on the device.
+
+**You can see what is happening.** The queue screen now shows the torrent being
+fetched, the percentage, the speed and how many other computers it is talking to,
+updating every second. Confirmed on screen: `Minerva_Myrient - MAME - Software List
+CHDs (merged) — 0% · 35 B/s · 0 peers`. Stopping the download makes the line
+disappear. This completes requirement R35 apart from the free-space warning, which
+was already there.
+
+**Closing the app no longer loses the download.** The app was killed outright while a
+download was running. On reopening, the download had already resumed on its own.
+Anything that was interrupted mid-flight is put back in the queue rather than left
+claiming to be downloading — a row that says "downloading" when nothing is would be a
+lie the user cannot act on.
+
+*Not yet tested: a full device reboot.* That needs the handheld to be restarted, which
+is the owner's call.
+
+**The unexplained failure from the previous entry is now narrowed down.** A third
+torrent was tried: TOSEC Panic, downloaded in about 2 seconds, 0 bytes of file content
+shared. So two of three torrents work and the large MAME one is the exception — the
+engine is not at fault. Whether that particular swarm is dead or something about that
+specific torrent breaks discovery is still open, but it is no longer a suspicion
+hanging over the whole download path.
+
+---
+
 ## 2026-07-20 — The app downloads, and provably does not share
 
 The queue now actually downloads. Pressing "Download" works through it torrent by

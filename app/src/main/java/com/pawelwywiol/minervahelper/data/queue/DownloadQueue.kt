@@ -5,6 +5,7 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import com.pawelwywiol.minervahelper.data.catalog.CatalogReader
@@ -53,6 +54,26 @@ class DownloadQueue(context: Context) {
     /** Bumped on every write so Compose screens reload; the table is far too small to observe. */
     var revision by mutableIntStateOf(0)
         private set
+
+    /**
+     * What the worker is doing right now. Held in memory rather than in the table: it changes every
+     * second and is meaningless once the worker stops.
+     */
+    var active by mutableStateOf<Active?>(null)
+
+    data class Active(val label: String, val percent: Int, val rate: Int, val peers: Int)
+
+    /**
+     * A worker killed mid-download leaves rows claiming to be downloading. Nothing is downloading
+     * after a restart, so they go back to the queue and are picked up again.
+     */
+    fun resetInterrupted() {
+        helper.writableDatabase.execSQL(
+            "UPDATE item SET state = ? WHERE state IN (?, ?)",
+            arrayOf(DownloadState.QUEUED.name, DownloadState.DOWNLOADING.name, DownloadState.VERIFYING.name),
+        )
+        revision++
+    }
 
     fun contains(rom: CatalogReader.Rom): Boolean =
         helper.readableDatabase.rawQuery(

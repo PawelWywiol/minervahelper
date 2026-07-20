@@ -70,15 +70,16 @@ lists scroll without stutter.
 
 - [x] Selection basket for multiple ROMs — the queue *is* the basket
 - [x] Group selections by torrent
-- [x] Download worker (start / cancel; pause-resume still to do)
+- [x] Download worker (start / cancel; true pause-resume still to do)
 - [x] Verify each file against the archive's checksum before accepting it
 - [x] Prove the non-sharing rule: 0 bytes of file content sent, checked every run
-- [ ] Survive app closure and device reboot
-- [ ] Find out why the large MAME torrent found no peers in 5 minutes
+- [x] Survive app closure — killed mid-download, resumed by itself on reopening
+- [ ] Survive a device reboot (not yet tested — needs the handheld restarted)
+- [ ] Find out why the large MAME torrent found no peers; two other torrents work,
+      so it is that swarm or that torrent, not the engine
 - [ ] Ship a tracker list (R33)
 - [ ] Transfer limits
-- [ ] Live statistics: speed, progress, queue size, free space (R35) — queue size
-      and free space done, speed and progress need the engine
+- [x] Live statistics: speed, progress, queue size, free space (R35)
 
 **Done when:** three ROMs from one torrent plus one from another all land correctly,
 the queue survives being killed and rebooted, and the user can see at a glance what

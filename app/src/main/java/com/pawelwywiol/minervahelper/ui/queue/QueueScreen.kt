@@ -56,6 +56,13 @@ fun QueueScreen(queue: DownloadQueue) {
                 color = if (total > free) MaterialTheme.colorScheme.error
                 else MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            queue.active?.let {
+                Text(
+                    "${it.label} — ${it.percent}% · ${formatSize(it.rate.toLong())}/s · ${it.peers} peers",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
             Spacer(Modifier.height(8.dp))
             Row {
                 Button(

@@ -40,6 +40,7 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
 
     override suspend fun doWork(): Result {
         Notifications.ensureChannels(applicationContext)
+        queue.resetInterrupted()
         val pending = queue.byTorrent()
             .mapValues { (_, items) -> items.filter { it.state != DownloadState.DONE } }
             .filterValues { it.isNotEmpty() }
@@ -59,14 +60,16 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
     private suspend fun downloadGroup(torrentPath: String, items: List<QueueItem>) {
         items.forEach { queue.setState(it.id, DownloadState.DOWNLOADING) }
         val stagingDir = File(applicationContext.filesDir, "downloads")
+        val label = torrentPath.substringAfterLast('/').removeSuffix(".torrent")
 
         try {
             val torrent = torrents.fetch(torrentPath)
-            report(torrentPath.substringAfterLast('/'), 0)
+            report(label, 0)
 
             val result = downloader.download(torrent, items.map { it.soId }.toSet(), stagingDir) { p ->
                 Log.i(TAG, "${p.percent()}% ${p.done}/${p.total} rate=${p.rate} peers=${p.peers} ${p.detail}")
-                report(torrentPath.substringAfterLast('/'), p.percent())
+                queue.active = DownloadQueue.Active(label, p.percent(), p.rate, p.peers)
+                report(label, p.percent())
             }
             Log.i(TAG, "payload uploaded=${result.payloadUploaded} B, protocol=${result.protocolOverhead} B")
             // The hard rule is checked, not assumed. Protocol overhead is unavoidable — a peer that
@@ -83,6 +86,8 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
         } catch (error: Exception) {
             Log.e(TAG, "torrent failed: $torrentPath", error)
             items.forEach { queue.setState(it.id, DownloadState.FAILED) }
+        } finally {
+            queue.active = null
         }
     }
 
