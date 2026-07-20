@@ -83,6 +83,16 @@ class CatalogReader(file: File) : Closeable {
         )
     }
 
+    /** The page that precedes [before], in list order — lets a trimmed list scroll back up. */
+    fun browseBefore(platformId: Long, before: Rom, limit: Int = 50): List<Rom> = roms(
+        "FROM file f",
+        "f.platform_id = ? AND (f.name < ? OR (f.name = ? AND f.id < ?)) " +
+            "ORDER BY f.name DESC, f.id DESC",
+        arrayOf(platformId.toString(), before.name, before.name, before.id.toString()),
+        limit,
+        offset = 0,
+    ).reversed()
+
     fun rom(id: Long): Rom? =
         roms("FROM file f", "f.id = ?", arrayOf(id.toString()), limit = 1, offset = 0).firstOrNull()
 

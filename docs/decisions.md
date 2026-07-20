@@ -306,3 +306,56 @@ called out. One accent keeps the eye on the action that matters; a green that me
 
 **Cost:** users who prefer light themes have no option yet. Added only if asked (see the
 roadmap's open questions).
+
+---
+
+<a id="d18"></a>
+## D18 — No shipped tracker list: DHT is the peer-discovery mechanism
+
+**Decision:** requirement R33 (ship our own torrent tracker list) is dropped. The app
+relies on DHT, which was already on.
+
+**Why:** the concern behind R33 was that the archive's magnet links carry no trackers.
+In practice the app never uses magnet links — it downloads full `.torrent` files, and
+those do list trackers, but measurement showed all of them dead. Every successful
+download so far (M0 through today) found its peers over DHT alone, usually within
+seconds. A bundled tracker list would add announce traffic to third-party servers
+while changing nothing.
+
+**Cost:** if DHT were ever blocked on a network, there is no fallback. Accepted: the
+target device lives on a home Wi-Fi.
+
+---
+
+<a id="d19"></a>
+## D19 — No data caps or speed limits
+
+**Decision:** R28 (data usage limit) is dropped, and the M3 "transfer limits" idea
+with it.
+
+**Why:** downloads only ever run on unmetered networks (enforced since M1), so a
+mobile plan can never be touched — which was the only real risk a data cap would
+guard against. A speed limit had no user-visible purpose either: the queue downloads
+one torrent at a time, and since today the user can pause it at any moment (R12).
+Each dropped setting is one less screen to explain.
+
+**Cost:** none identified. Revisit only if a real situation demands it.
+
+---
+
+<a id="d20"></a>
+## D20 — Search gets its own on-screen keys
+
+**Decision:** the Search screen shows a small built-in keyboard (a–z, 0–9, space,
+backspace) that works with the d-pad. The system keyboard still appears for touch
+typing.
+
+**Why:** measured on the device: the system on-screen keyboard ignores the d-pad
+completely — no arrow or confirm key does anything — so a gamepad-only user could
+never type a single letter, breaking R23 ("no touch required"). This cannot be fixed
+from inside an app; the only reliable answer is keys the app itself owns, which
+already obey the pad. A second trap was found on the way: the text field swallows
+d-pad presses to move its cursor, so a down-press is explicitly routed out of the
+field onto the keys.
+
+**Cost:** a strip of the Search screen is spent on keys that touch users do not need.

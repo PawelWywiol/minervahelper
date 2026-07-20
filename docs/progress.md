@@ -7,6 +7,80 @@ unresolved. Claims without measurements do not belong here.
 
 ---
 
+## 2026-07-20 — The last M4 box: a downloaded ROM, seen and played in the frontend
+
+The proof came from real use, which beats any staged test. The device's frontend
+(Daijishō) syncs its Commodore Amiga platform from the exact folder this app
+downloads into (`ROMs/amiga` on the SD card). Its library lists the games the app
+placed there, and its own history shows **Mortal Kumquat III — a file this app
+downloaded — launched and played by the owner** ("Last played 3 hr. ago. Played
+1 times"). Placement → discovery → launch, end to end. **M4 is done.**
+
+One practical note for the owner: the frontend only shows folders it has been given
+per platform. Amiga is wired up; an Arcade platform was not visibly configured, so
+the arcade test file downloaded today (`progear.zip`, a real playable FinalBurn Neo
+game, 13.8 MB, payload uploaded 0 B) sits correctly in `ROMs/arcade` waiting for
+one. It was left in place on purpose — remove it if unwanted.
+
+---
+
+## 2026-07-20 — Battery audit and the catalogue-update button, both for real
+
+**Battery (R29 ✅).** Measured on the device around a real 151 MB download. Idle,
+the app holds no wakelocks and uses 0% CPU. While downloading it held exactly the
+locks a foreground download needs (the system job and the foreground service) at
+~15% CPU; ten seconds after the download finished, wakelocks were back to zero and
+CPU to 0%. Nothing leaks. One honest gap: milliamp-hour totals cannot be measured
+while the device is powered by the USB debugging cable, so the last word belongs to
+the battery screen after a day of normal use.
+
+**The update button was finally pressed (R34, fully closed).** The catalogue on the
+device predated version recording, so the update banner had never had a reason to
+appear; the recorded version was marked stale by hand and the app then did the rest
+itself: banner shown → "Update the list" pressed → 1.76 GB index downloaded in
+~9 minutes → catalogue rebuilt (2,428,272 files, 1,591 platforms, 521 MB) → the
+archive's real version recorded → banner gone. Favourites survived the rebuild and
+show their downloaded markers. **M5 is done; M6 now waits only on the owner's
+signing key.**
+
+---
+
+## 2026-07-20 — M2 and M3 closed: pause/resume, memory cap, a gamepad keyboard
+
+**Pause and resume are real now (R12 ✅).** The Queue screen's Stop button became a
+Pause/Resume pair that follows what the system is actually doing. Measured with a
+151 MB file from the MAME torrent: download at ~4.5 MB/s, paused mid-flight (the
+engine stopped within a second, the item returned to "queued", 90 MB of fetched
+data kept on disk), resumed — the engine rechecked the kept data and continued
+**from 50% in under two seconds**. Nothing was downloaded twice. Payload uploaded
+0 B through the whole exercise, as always. Test files were removed afterwards.
+
+**Long scrolls no longer accumulate memory (M2 ✅).** The ROM list now keeps at most
+1,000 rows in memory and reloads discarded ones from the catalogue when scrolling
+back. Measured on the 753,442-row MAME platform: 250 fling-scrolls deep, Java heap
+flat at ~16.5 MB before and after; scrolling back up reloaded the earlier rows
+without a visible seam.
+
+**Search can be typed with the gamepad (R23 ✅, [D20](decisions.md#d20)).** Measured
+first: the system on-screen keyboard ignores every d-pad and confirm key — a pad
+user could not type one letter. Search therefore got its own on-screen keys
+(a–z, 0–9, space, backspace) drawn by the app, where the pad already works; letters
+were typed on the device using pad key events alone, and the system keyboard never
+appeared. A second trap fixed on the way: the text field itself swallowed d-pad
+presses, so a down-press is now routed out of the field onto the keys.
+
+**Two requirements dropped after measurement, not guesswork:** R33 (own tracker
+list — the torrents' trackers are dead and DHT found every live swarm in every
+test, [D18](decisions.md#d18)) and R28 (data cap — downloads are unmetered-only,
+[D19](decisions.md#d19)). With these, **M2 and M3 are fully done.**
+
+**Game metadata research done** at the owner's request: where titles, descriptions
+and cover art could come from (hash-first matching against the catalogue's md5).
+Findings and a recommended shape in [metadata.md](metadata.md); nothing is planned
+into a milestone yet.
+
+---
+
 ## 2026-07-20 — Reboot survival proven, and the owner's review notes addressed
 
 **The queue survives a device reboot (R13 ✅).** Measured end to end: a file was

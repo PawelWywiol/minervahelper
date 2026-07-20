@@ -38,8 +38,13 @@ possible future feature, out of scope for now.
 | R9 | **Download only the selected files from a torrent** (the core of the project) | ✅ | M0 |
 | R10 | Group selected ROMs by torrent (one torrent = one job) | ✅ | M3 |
 | R11 | Background download queue with automatic start (R36) | ✅ | M3 |
-| R12 | Pause / resume / cancel at any time | 🔨 | M3 |
+| R12 | Pause / resume / cancel at any time | ✅ | M3 |
 | R13 | Resume after the app is closed and after a device reboot | ✅ | M3 |
+
+**R12 — how it works:** Pause stops the download but keeps everything fetched so far;
+Resume picks up where it left off. Proven on the device with a 151 MB file: paused at
+50%, resumed, and the second half started downloading within two seconds — nothing was
+fetched twice. Cancel is per-item: tap a queued game and confirm its removal.
 
 ## Storing files
 
@@ -75,7 +80,7 @@ a downloaded ROM as a program anyway. The limitation is spelled out in
 | ID | Requirement | Status | Stage |
 |---|---|---|---|
 | R22 | Intuitive interface, legible on a small screen | ✅ | M7 |
-| R23 | **Full D-pad / gamepad operation, no touch required** | 🔨 | M2 |
+| R23 | **Full D-pad / gamepad operation, no touch required** | ✅ | M2 |
 | R24 | Clear download progress and notifications | 🔨 | M3 |
 | R25 | First-run onboarding | ✅ | M5 |
 | R35 | **Live statistics while queueing and downloading** | ✅ | M3 |
@@ -91,9 +96,12 @@ always knows where they are, where they can go, what the app is doing, and what 
 happen if they tap — with a visual identity that suits a gaming handheld, not a
 template demo. Touch and gamepad are both first-class (the device has a touchscreen).
 
-**R23 — warning:** stage M0 revealed that a focused button **does not respond** to
-the gamepad action button. This must be solved in M2, otherwise the app is unusable
-on the target hardware.
+**R23 — how it was closed:** two hardware traps were found and fixed. The action
+button sends a code Android does not treat as "confirm" — remapped app-wide (M2).
+And the system on-screen keyboard ignores the d-pad entirely, so a pad user could
+never type into Search — the Search screen now has its own small keyboard
+([D20](decisions.md#d20)), typed on the device with pad keys alone. A final
+device-in-hand sweep by the owner is still welcome.
 
 **R35 — what must be visible:** the user should never have to guess what the app is
 doing, or find out too late that it will not fit. At minimum:
@@ -109,8 +117,10 @@ doing, or find out too late that it will not fit. At minimum:
 |---|---|---|---|
 | R26 | Runs smoothly on modest hardware | ✅ | M1 |
 | R27 | Large downloads over Wi-Fi only | ✅ | M1 |
-| R28 | Data usage limit | ⬜ | M5 |
-| R29 | Economical battery use | ⬜ | M5 |
+| R29 | Economical battery use | ✅ | M5 |
+
+*Previously listed here — R28 "data usage limit" — dropped 2026-07-20: downloads are
+unmetered-only, so a mobile plan can never be touched ([D19](decisions.md#d19)).*
 
 ## Legal position
 
@@ -141,8 +151,8 @@ Not in the original brief; they emerged from reality or from later clarification
 
 | ID | Requirement | Reason |
 |---|---|---|
-| R33 | The app must ship its own torrent tracker list | Magnet links in the archive contain none — downloads would never start |
-| R34 | Re-import the catalogue when the archive is updated | The archive changes; new versions must be detected — implemented 2026-07-20 |
+| R33 | ~~The app must ship its own torrent tracker list~~ | Dropped 2026-07-20 — see below |
+| R34 | Re-import the catalogue when the archive is updated | The archive changes; fully tested 2026-07-20 — banner pressed, 1.76 GB index re-downloaded, catalogue rebuilt, favourites intact |
 | R18 | Fallback folder for unmapped platforms | See above |
 | R35 | Live download / queue / storage statistics | Added 2026-07-20 |
 | R36–R40 | Automatic queue, downloaded markers, folder-move prompt, finished-product look | Owner's review of the working app, 2026-07-20 — see [design.md](design.md) |
@@ -152,4 +162,6 @@ Not in the original brief; they emerged from reality or from later clarification
 | ID | Requirement | Why dropped |
 |---|---|---|
 | R31 | Copyright infringement reporting | The app hosts and distributes nothing (2026-07-20) |
-| — | Descriptions, release year, publisher | Absent from the archive; possible future feature (2026-07-20) |
+| R33 | Ship a torrent tracker list | The `.torrent` files' trackers are all dead anyway; DHT found every live swarm in every test ([D18](decisions.md#d18), 2026-07-20) |
+| R28 | Data usage limit | Unmetered-only already guarantees a mobile plan is never touched ([D19](decisions.md#d19), 2026-07-20) |
+| — | Descriptions, release year, publisher | Absent from the archive; researched as a future feature 2026-07-20 — see [metadata.md](metadata.md) |

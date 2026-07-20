@@ -17,6 +17,7 @@ First time here? Start with [project.md](project.md).
 | [roadmap.md](roadmap.md) | The plan: stages, what is done, what comes next |
 | [progress.md](progress.md) | Work log: what was done when, with measured results |
 | [decisions.md](decisions.md) | Important decisions and **why** they were made |
+| [metadata.md](metadata.md) | Research: where game info and cover art could come from |
 | [glossary.md](glossary.md) | Terms explained (torrent, ROM, checksum, SAF…) |
 
 ## Project status in one sentence
@@ -24,7 +25,9 @@ First time here? Start with [project.md](project.md).
 The core works end-to-end on the device — browse, search, queue, selective torrent
 download, verification, placement into per-platform folders — and after **M7**
 ([design.md](design.md)) it navigates, behaves and looks like a finished product:
-persistent menu, automatic queue, downloaded markers, dark identity. Loose ends
-remain in M2–M6; the owner's device-in-hand acceptance of M7 is pending.
+persistent menu, automatic queue, downloaded markers, dark identity. Stages M2, M3,
+M4 and M5 are fully closed — a game the app downloaded has been found and played in
+the device's frontend. What remains needs the owner: the signing key (M6) and the
+device-in-hand acceptance of M7.
 
 Details in [roadmap.md](roadmap.md) and [progress.md](progress.md).

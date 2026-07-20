@@ -22,6 +22,8 @@ import com.pawelwywiol.minervahelper.data.placement.Destinations
 import com.pawelwywiol.minervahelper.data.placement.FilePlacement
 import com.pawelwywiol.minervahelper.data.queue.QueueItem
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import okhttp3.OkHttpClient
 import com.pawelwywiol.minervahelper.ui.formatSize
 import java.io.File
@@ -205,6 +207,11 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
         fun cancel(context: Context) {
             WorkManager.getInstance(context).cancelUniqueWork(NAME)
         }
+
+        /** True while the queue is being worked on or is waiting for its constraints (Wi-Fi). */
+        fun isActiveFlow(context: Context): Flow<Boolean> =
+            WorkManager.getInstance(context).getWorkInfosForUniqueWorkFlow(NAME)
+                .map { infos -> infos.any { !it.state.isFinished } }
     }
 }
 

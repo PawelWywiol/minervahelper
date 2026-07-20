@@ -19,6 +19,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,6 +59,8 @@ fun QueueScreen(queue: DownloadQueue, destinations: Destinations, onFolders: () 
     val items = groups.values.flatten()
     val total = items.sumOf { it.size }
     val free = remember { StatFs(context.filesDir.path).availableBytes }
+    val working by remember { DownloadWorker.isActiveFlow(context) }
+        .collectAsState(initial = true)
 
     Screen("Queue") {
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
@@ -92,17 +95,25 @@ fun QueueScreen(queue: DownloadQueue, destinations: Destinations, onFolders: () 
                 TextButton(onClick = onFolders) { Text("Choose folder") }
             }
             Text(
-                if (items.isEmpty())
-                    "Nothing is waiting. Find a game in Browse or Search and press Download — " +
-                        "it will appear here and fetch itself."
-                else "Games download by themselves as soon as they are added.",
+                when {
+                    items.isEmpty() ->
+                        "Nothing is waiting. Find a game in Browse or Search and press Download — " +
+                            "it will appear here and fetch itself."
+                    !working && items.any { it.state == DownloadState.QUEUED } ->
+                        "Paused — press Resume to continue. Progress made so far is kept."
+                    else -> "Games download by themselves as soon as they are added."
+                },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             if (items.isNotEmpty()) {
                 Spacer(Modifier.height(8.dp))
                 Row {
-                    OutlinedButton(onClick = { DownloadWorker.cancel(context) }) { Text("Stop") }
+                    if (working) {
+                        OutlinedButton(onClick = { DownloadWorker.cancel(context) }) { Text("Pause") }
+                    } else if (items.any { it.state == DownloadState.QUEUED }) {
+                        Button(onClick = { DownloadWorker.enqueue(context) }) { Text("Resume") }
+                    }
                     if (items.any { it.state == DownloadState.FAILED }) {
                         Spacer(Modifier.width(8.dp))
                         Button(onClick = {

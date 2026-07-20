@@ -1,5 +1,9 @@
 package com.pawelwywiol.minervahelper.ui.catalog
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilledTonalButton
@@ -27,10 +32,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import com.pawelwywiol.minervahelper.data.catalog.CatalogReader
 import com.pawelwywiol.minervahelper.data.catalog.CatalogSync
@@ -130,6 +142,10 @@ fun RomsScreen(
         snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0 }
             .collect { if (it >= pager.roms.size - PREFETCH) pager.loadMore() }
     }
+    LaunchedEffect(pager) {
+        snapshotFlow { listState.firstVisibleItemIndex }
+            .collect { if (it < PREFETCH) pager.loadBefore() }
+    }
 
     val downloadedKeys = remember(queue.revision) { queue.downloadedKeys() }
     Screen(title, showBack = true) {
@@ -139,7 +155,7 @@ fun RomsScreen(
                     FocusableRow(
                         onClick = { selected = rom.id },
                         selected = rom.id == selected,
-                        modifier = Modifier.initialFocus(index == 0),
+                        modifier = Modifier.initialFocus(index == 0 && !pager.trimmedAbove),
                     ) {
                         Text(rom.name, style = MaterialTheme.typography.bodyLarge)
                         RomSubtitle(formatSize(rom.size), rom, downloadedKeys)
@@ -157,9 +173,7 @@ fun SearchScreen(reader: CatalogReader, favourites: Favourites, queue: DownloadQ
     var query by remember { mutableStateOf("") }
     var hits by remember { mutableStateOf<List<CatalogReader.Rom>>(emptyList()) }
     var selected by remember { mutableStateOf<Long?>(null) }
-    val focusRequester = remember { FocusRequester() }
 
-    LaunchedEffect(Unit) { focusRequester.requestFocus() }
     LaunchedEffect(Unit) {
         snapshotFlow { query }.debounce(250).collect { text ->
             hits = withContext(Dispatchers.IO) { reader.search(text) }
@@ -169,12 +183,26 @@ fun SearchScreen(reader: CatalogReader, favourites: Favourites, queue: DownloadQ
     Screen("Search") {
         Row(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                // A down-press must leave the field: the text field consumes arrow keys for cursor
+                // movement, which traps a d-pad user with a system keyboard they cannot drive.
+                val focusManager = LocalFocusManager.current
                 OutlinedTextField(
                     value = query,
                     onValueChange = { query = it },
                     singleLine = true,
                     label = { Text("ROM name") },
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).focusRequester(focusRequester),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                        .onPreviewKeyEvent {
+                            if (it.type == KeyEventType.KeyDown && it.key == Key.DirectionDown) {
+                                focusManager.moveFocus(FocusDirection.Down)
+                                true
+                            } else false
+                        },
+                )
+                Spacer(Modifier.height(8.dp))
+                SearchKeypad(
+                    onKey = { query += it },
+                    onBackspace = { query = query.dropLast(1) },
                 )
                 Spacer(Modifier.height(8.dp))
                 if (hits.isEmpty()) {
@@ -201,6 +229,62 @@ fun SearchScreen(reader: CatalogReader, favourites: Favourites, queue: DownloadQ
             }
             RomDetailPane(reader, favourites, queue, selected, Modifier.weight(1f))
         }
+    }
+}
+
+private val KEY_ROWS = listOf(
+    "abcdefghij".toList(),
+    "klmnopqrst".toList(),
+    "uvwxyz".toList(),
+    "0123456789".toList(),
+)
+
+/**
+ * The system keyboard cannot be driven by the d-pad at all (measured on the device: LatinIME
+ * ignores every dpad and confirm key), so gamepad search needs its own keys.
+ */
+@Composable
+private fun SearchKeypad(onKey: (Char) -> Unit, onBackspace: () -> Unit) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = Modifier.padding(horizontal = 16.dp),
+    ) {
+        KEY_ROWS.forEachIndexed { rowIndex, row ->
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                row.forEachIndexed { i, c ->
+                    Key(
+                        c.toString(),
+                        Modifier.weight(1f).initialFocus(rowIndex == 0 && i == 0),
+                    ) { onKey(c) }
+                }
+                if (rowIndex == 2) {
+                    Key("space", Modifier.weight(2f)) { onKey(' ') }
+                    Key("⌫", Modifier.weight(2f)) { onBackspace() }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun Key(label: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    var focused by remember { mutableStateOf(false) }
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .onFocusChanged { focused = it.isFocused }
+            .background(
+                if (focused) MaterialTheme.colorScheme.secondaryContainer
+                else MaterialTheme.colorScheme.surfaceContainerHigh,
+                RoundedCornerShape(4.dp),
+            )
+            .clickable(onClick = onClick)
+            .padding(vertical = 6.dp),
+    ) {
+        Text(label, style = MaterialTheme.typography.bodyMedium)
     }
 }
 

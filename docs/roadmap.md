@@ -11,10 +11,10 @@ Last updated: 2026-07-20
 |---|---|---|
 | **M0** | Project skeleton + proving the risky path | ✅ **done** |
 | **M1** | Catalogue: download, conversion, search | ✅ **done** |
-| **M2** | Interface: browsing, search, details, favourites | 🔨 in progress |
-| **M3** | Download queue and engine | 🔨 in progress |
-| **M4** | File placement, verification, platform mapping | 🟡 |
-| **M5** | Onboarding, settings, battery | 🟡 |
+| **M2** | Interface: browsing, search, details, favourites | ✅ **done** |
+| **M3** | Download queue and engine | ✅ **done** |
+| **M4** | File placement, verification, platform mapping | ✅ **done** |
+| **M5** | Onboarding, settings, battery | ✅ **done** |
 | **M6** | Hardening and release | 🟡 |
 | **M7** | **User experience overhaul** — navigation, automatic queue, visual identity | ✅ **done** — owner's device-in-hand acceptance pending |
 
@@ -48,7 +48,7 @@ matched, 2 seconds. Details in [progress.md](progress.md).
 **Result:** 11-minute download, 80-second conversion, 521 MB catalogue,
 19 ms search. Verified byte-for-byte against a desktop conversion.
 
-## 🔨 M2 — Interface (in progress)
+## ✅ M2 — Interface
 
 - [x] **Fix gamepad navigation** — a focused button did not respond to the action
       button (found in M0). Cause: the handheld sends a gamepad button code that
@@ -59,19 +59,25 @@ matched, 2 seconds. Details in [progress.md](progress.md).
 - [x] Smooth scrolling over large lists (the biggest platform has 753k entries) —
       measured on the device: 1 dropped frame out of 1,028
 - [x] Favourites — kept as archive paths, so they survive a catalogue rebuild
-- [ ] Release memory when scrolling very far (the list currently keeps every row it
-      has loaded)
-- [ ] Confirm the search box can be typed into with the gamepad alone (needs the
-      on-screen keyboard; only tested with injected text so far)
+- [x] Release memory when scrolling very far — the list now keeps at most 1,000 rows
+      and reloads either direction; measured 2026-07-20 on the 753k-row platform:
+      250 fling-scrolls deep, Java heap flat (16.7 MB → 16.4 MB), scrolling back up
+      reloads the trimmed rows seamlessly
+- [x] Typing into search with the gamepad alone — the system keyboard turned out to
+      ignore the d-pad entirely, so Search got its own built-in keys
+      ([D20](decisions.md#d20)); typed on the device with pad key events alone,
+      system keyboard never opened
 
 **Done when:** the whole app can be operated with the gamepad alone, and long
 lists scroll without stutter.
 
-## 🔨 M3 — Download queue and engine (in progress)
+## ✅ M3 — Download queue and engine
 
 - [x] Selection basket for multiple ROMs — the queue *is* the basket
 - [x] Group selections by torrent
-- [x] Download worker (start / cancel; true pause-resume still to do)
+- [x] Download worker with pause / resume / cancel (R12) — tested 2026-07-20 on a
+      151 MB file: paused at 50%, resumed, the engine rechecked the kept data and
+      continued from 50% within two seconds
 - [x] Verify each file against the archive's checksum before accepting it
 - [x] Prove the non-sharing rule: 0 bytes of file content sent, checked every run
 - [x] Survive app closure — killed mid-download, resumed by itself on reopening
@@ -80,33 +86,46 @@ lists scroll without stutter.
 - [x] The large MAME torrent question is settled: the "Software List CHDs (merged)"
       swarm simply has no seeds (measured twice, 5 minutes each), while the even
       bigger "MAME - EXTRAs" torrent downloads fine — it is that swarm, not the engine
-- [ ] Ship a tracker list (R33)
-- [ ] Transfer limits
+- [x] Tracker list (R33) — dropped: the torrents' own trackers are dead and DHT found
+      every live swarm in every test ([D18](decisions.md#d18))
+- [x] Transfer limits — dropped: unmetered-only plus the new Pause button covers every
+      real need ([D19](decisions.md#d19))
 - [x] Live statistics: speed, progress, queue size, free space (R35)
 
 **Done when:** three ROMs from one torrent plus one from another all land correctly,
 the queue survives being killed and rebooted, and the user can see at a glance what
 is downloading, how fast, and whether it will fit.
 
-## 🟡 M4 — File placement and verification
+## ✅ M4 — File placement and verification
 
 - [x] Root folder picker (Storage Access Framework, survives a restart)
 - [x] Editable platform → folder mapping
 - [x] Flow for unmapped platforms (R18) — cleaned-up archive name, marked as a guess
 - [x] Verify, then move into place
 - [x] Free-space check before starting
-- [ ] Confirm a placed ROM appears and launches in the emulator frontend
+- [x] Confirm a placed ROM appears and launches in the emulator frontend — confirmed
+      2026-07-20 with real use: the device's frontend (Daijishō) syncs its Amiga
+      platform from the app's `ROMs/amiga` folder, lists the games the app downloaded
+      there, and its history shows one of them (Mortal Kumquat III) launched and
+      played by the owner. Note: whether a given platform shows up is the frontend's
+      own per-platform path setup — e.g. an Arcade platform was not visibly
+      configured yet, so `ROMs/arcade` content waits for that
 
 **Done when:** a downloaded ROM lands in the right folder and launches in an
 emulator frontend; a corrupted file is rejected with a retry offered.
 
-## 🟡 M5 — Onboarding, settings, battery
+## ✅ M5 — Onboarding, settings, battery
 
 - [x] First-run flow — disclaimer, folder, catalogue, in that order
 - [x] Disclaimer of responsibility (R30)
 - [x] Wi-Fi enforcement (unmetered-only, done in M1)
-- [ ] Data limit (R28) — confirm it is still needed; unmetered-only may cover it
-- [ ] Battery audit
+- [x] Data limit (R28) — dropped 2026-07-20: unmetered-only covers it
+      ([D19](decisions.md#d19))
+- [x] Battery audit (R29) — measured 2026-07-20: idle app holds zero wakelocks and
+      0% CPU; during a real download only the necessary foreground-service locks are
+      held at ~15% CPU, and every lock is released the moment the download finishes.
+      Milliamp-hour totals could not be read because the device charges over the USB
+      debugging cable — worth a glance at the battery screen after a day of normal use
 
 **Done when:** a fresh install leads to playing a downloaded game in one sitting,
 entirely on the device.
@@ -121,7 +140,10 @@ entirely on the device.
 - [x] Network loss during download — tested; it pauses and resumes by itself
 - [x] Release build with code shrinking — tested on device, torrent path intact
 - [ ] Real signing key (owner's to create)
-- [x] Versioned catalogue re-import (R34) — detection tested; the rebuild button itself not yet pressed
+- [x] Versioned catalogue re-import (R34) — fully tested on the device 2026-07-20:
+      the update banner appeared, the button was pressed, the app downloaded the
+      1.76 GB index in ~9 minutes, rebuilt the 521 MB catalogue (2,428,272 files),
+      recorded the archive's version, and the banner went away; favourites survived
 
 ## ⬜ M7 — User experience overhaul (next)
 
@@ -158,6 +180,7 @@ Blocking nothing right now, but they need answers before the relevant stage:
 | Question | Recommendation | Needed by |
 |---|---|---|
 | Fill in the remaining platform mappings (1,006 pairs, 10% of files)? | Add them based on actual usage, not upfront | M4 |
+| Enrich ROMs with game info and cover art from external databases? | Researched 2026-07-20 — hash-first plan in [metadata.md](metadata.md); owner decides if and when | future |
 | Where do finished downloads go — vanish, or a "Downloaded" history? | History: keeps the record R37/R38 need anyway, and users can check what they have | M7 |
 | Dark theme only, or light and dark? | Dark-first (matches the device); add light later only if asked | M7 |
 | "Already downloaded" check: name+size, or full checksum? | Name+size, as specified — checksums of a whole library would take minutes | M7 |
