@@ -7,6 +7,44 @@ unresolved. Claims without measurements do not belong here.
 
 ---
 
+## 2026-07-20 — A failed download now says why, and can be retried
+
+Until now a download that failed showed the word "failed" and nothing else. The user
+could not tell whether to wait, free up space, reconnect, or give up on that file.
+
+**Every failure now carries a reason, in plain language.** Nobody is sharing the file;
+no connection; not enough space (with the numbers: how much is needed, how much is
+free); the downloaded file was damaged; the folder could not be written to. The reason
+is stored with the item and shown under it in red.
+
+**"Retry failed" puts everything that failed back in the queue** and clears the old
+reason. The button only appears when something has actually failed.
+
+**Space is checked before a torrent is started,** not after gigabytes have been
+fetched.
+
+**The queue survives an app update.** The database gained a column for the reason.
+The old upgrade path deleted the whole table, which would have silently emptied the
+user's queue on the next release — it now migrates instead. Verified on the device:
+the queue went from version 1 to version 2 with the existing item intact.
+
+**Tested with a real failure, end to end.** The MAME ROM was queued and downloaded
+for five minutes with zero peers, then failed with *"No one is sharing this file right
+now — try again later"*, shown on screen. "Retry failed" returned it to the queue and
+cleared the message.
+
+**This also settles the open MAME question from two entries ago.** That swarm has now
+been watched twice for five minutes with zero peers and zero connections, while two
+other torrents from the same archive download in seconds. The torrent has no seeds.
+Nothing in the app is broken; the file is simply not available right now — which is
+exactly what the new message tells the user.
+
+*Not yet done in M6:* losing the network mid-download is classified in the code but has
+not been tested by actually dropping Wi-Fi; the odd edge cases (a 305k-file torrent,
+zero-byte files) are untouched; and there is no release build with shrinking yet.
+
+---
+
 ## 2026-07-20 — A fresh install now explains itself
 
 Until now the app assumed you already knew three things: that a disclaimer existed

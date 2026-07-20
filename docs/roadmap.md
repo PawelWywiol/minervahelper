@@ -15,7 +15,7 @@ Last updated: 2026-07-20
 | **M3** | Download queue and engine | 🔨 in progress |
 | **M4** | File placement, verification, platform mapping | 🟡 |
 | **M5** | Onboarding, settings, battery | 🟡 |
-| **M6** | Hardening and release | ⬜ |
+| **M6** | Hardening and release | 🟡 |
 
 ---
 
@@ -108,11 +108,12 @@ emulator frontend; a corrupted file is rejected with a retry offered.
 **Done when:** a fresh install leads to playing a downloaded game in one sitting,
 entirely on the device.
 
-## ⬜ M6 — Hardening and release
+## 🟡 M6 — Hardening and release
 
-- [ ] Edge cases: a 305k-file torrent, zero-byte files, files larger than free space
-- [ ] Network loss during download
-- [ ] Clear error messages
+- [x] Clear error messages, with a way back (retry)
+- [x] Free-space check before a torrent starts
+- [ ] Edge cases: a 305k-file torrent, zero-byte files
+- [ ] Network loss during download — classified in code, not yet tested for real
 - [ ] Release build with code shrinking
 - [ ] Versioned catalogue re-import (R34)
 

@@ -1,6 +1,7 @@
 package com.pawelwywiol.minervahelper.work
 
 import android.content.Context
+import android.os.StatFs
 import android.content.pm.ServiceInfo
 import android.util.Log
 import androidx.work.Constraints
@@ -22,7 +23,12 @@ import com.pawelwywiol.minervahelper.data.queue.QueueItem
 import kotlinx.coroutines.CancellationException
 import okhttp3.OkHttpClient
 import org.libtorrent4j.TorrentInfo
+import com.pawelwywiol.minervahelper.ui.formatSize
 import java.io.File
+import java.io.IOException
+import java.net.ConnectException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 
 private const val TAG = "MinervaDownload"
 
@@ -73,6 +79,11 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
         val label = torrentPath.substringAfterLast('/').removeSuffix(".torrent")
 
         try {
+            val needed = items.sumOf { it.size }
+            val free = StatFs(applicationContext.filesDir.path).availableBytes
+            if (needed > free) {
+                throw OutOfSpace(needed, free)
+            }
             val torrent = torrents.fetch(torrentPath)
             report(label, 0)
 
@@ -95,11 +106,31 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
             throw cancelled
         } catch (error: Exception) {
             Log.e(TAG, "torrent failed: $torrentPath", error)
-            items.forEach { queue.setState(it.id, DownloadState.FAILED) }
+            val reason = reason(error)
+            items.forEach { queue.setState(it.id, DownloadState.FAILED, reason) }
         } finally {
             queue.active = null
         }
     }
+
+    /**
+     * Plain language, and specific enough to act on. "Failed" alone tells the user nothing about
+     * whether to wait, free up space, or give up on that file.
+     */
+    private fun reason(error: Throwable): String = when (error) {
+        is OutOfSpace -> "Not enough space — needs ${formatSize(error.needed)}, " +
+            "${formatSize(error.free)} free"
+        is SelectiveDownloader.Stalled ->
+            if (error.peers == 0) "No one is sharing this file right now — try again later"
+            else "The download stopped making progress — try again later"
+        is UnknownHostException, is SocketTimeoutException, is ConnectException ->
+            "No connection — check Wi-Fi and try again"
+        is IOException -> "Connection problem — ${error.message.orEmpty().ifEmpty { "try again" }}"
+        else -> error.message?.takeIf { it.isNotBlank() } ?: "Something went wrong"
+    }
+
+    private class OutOfSpace(val needed: Long, val free: Long) :
+        Exception("needs $needed bytes, $free free")
 
     private fun verifyAndPlace(item: QueueItem, file: File) {
         queue.setState(item.id, DownloadState.VERIFYING)
@@ -110,19 +141,29 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
             // A file that failed its checksum is deleted rather than kept: left in staging it would
             // be mistaken for a finished download on the next run.
             file.delete()
-            queue.setState(item.id, DownloadState.FAILED)
+            queue.setState(
+                item.id, DownloadState.FAILED,
+                "The downloaded file was damaged — remove it and try again",
+            )
             return
         }
-        queue.setState(item.id, if (place(item, file)) DownloadState.DONE else DownloadState.FAILED)
+        val failure = placementFailure(item, file)
+        if (failure == null) queue.setState(item.id, DownloadState.DONE)
+        else queue.setState(item.id, DownloadState.FAILED, failure)
     }
 
-    private fun place(item: QueueItem, file: File): Boolean {
-        val root = destinations.root ?: return false
+    /** Null when the file was placed; otherwise why it could not be. */
+    private fun placementFailure(item: QueueItem, file: File): String? {
+        val root = destinations.root ?: return "No destination folder chosen"
         val folder = destinations.folderFor(item.collection, item.platformKey)
         return runCatching { placement.place(root, folder, item.name, file) }
-            .onSuccess { Log.i(TAG, "placed ${item.name} in $folder") }
-            .onFailure { Log.e(TAG, "cannot place ${item.name} in $folder", it) }
-            .isSuccess
+            .fold(
+                onSuccess = { Log.i(TAG, "placed ${item.name} in $folder"); null },
+                onFailure = {
+                    Log.e(TAG, "cannot place ${item.name} in $folder", it)
+                    "Could not save into $folder — ${it.message.orEmpty().ifEmpty { "check the folder" }}"
+                },
+            )
     }
 
     private suspend fun report(label: String, percent: Int) = setForeground(

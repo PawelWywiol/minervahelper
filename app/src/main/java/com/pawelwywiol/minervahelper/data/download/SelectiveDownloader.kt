@@ -68,6 +68,9 @@ class TorrentCache(private val dir: File, private val http: OkHttpClient) {
  */
 class SelectiveDownloader {
 
+    /** No peer offered any data for [STALL_LIMIT_SECONDS]; [peers] is how many were connected. */
+    class Stalled(val peers: Int) : Exception("no progress for ${STALL_LIMIT_SECONDS}s (peers=$peers)")
+
     data class Result(val payloadUploaded: Long, val protocolOverhead: Long)
 
     data class Progress(
@@ -116,9 +119,7 @@ class SelectiveDownloader {
                 }
                 stalledFor = if (done == lastDone) stalledFor + 1 else 0
                 lastDone = done
-                check(stalledFor < STALL_LIMIT_SECONDS) {
-                    "no progress for ${STALL_LIMIT_SECONDS}s (peers=${status.numPeers()})"
-                }
+                if (stalledFor >= STALL_LIMIT_SECONDS) throw Stalled(status.numPeers())
 
                 onProgress(
                     Progress(

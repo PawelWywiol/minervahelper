@@ -23,6 +23,7 @@ data class QueueItem(
     val md5: String?,
     val sha1: String?,
     val state: DownloadState,
+    val error: String?,
 )
 
 /**
@@ -33,21 +34,22 @@ data class QueueItem(
  */
 class DownloadQueue(context: Context) {
 
-    private val helper = object : SQLiteOpenHelper(context, "queue.db", null, 1) {
+    private val helper = object : SQLiteOpenHelper(context, "queue.db", null, 2) {
         override fun onCreate(db: SQLiteDatabase) {
             db.execSQL(
                 "CREATE TABLE item(" +
                     "id INTEGER PRIMARY KEY, name TEXT NOT NULL, size INTEGER NOT NULL," +
                     "collection TEXT NOT NULL, platform_key TEXT NOT NULL, torrent_path TEXT NOT NULL," +
                     "so_id INTEGER NOT NULL, md5 TEXT, sha1 TEXT, state TEXT NOT NULL," +
-                    "added_at INTEGER NOT NULL)"
+                    "error TEXT, added_at INTEGER NOT NULL)"
             )
             db.execSQL("CREATE UNIQUE INDEX ux_item ON item(torrent_path, so_id)")
         }
 
+        // Migrated rather than recreated: the table holds what the user picked, and dropping it
+        // would silently empty their queue on an app update.
         override fun onUpgrade(db: SQLiteDatabase, old: Int, new: Int) {
-            db.execSQL("DROP TABLE IF EXISTS item")
-            onCreate(db)
+            if (old < 2) db.execSQL("ALTER TABLE item ADD COLUMN error TEXT")
         }
     }
 
@@ -96,9 +98,19 @@ class DownloadQueue(context: Context) {
         revision++
     }
 
-    fun setState(id: Long, state: DownloadState) {
+    fun setState(id: Long, state: DownloadState, error: String? = null) {
         helper.writableDatabase.execSQL(
-            "UPDATE item SET state = ? WHERE id = ?", arrayOf<Any>(state.name, id),
+            "UPDATE item SET state = ?, error = ? WHERE id = ?",
+            arrayOf<Any?>(state.name, error, id),
+        )
+        revision++
+    }
+
+    /** Puts every failed item back in the queue, clearing the reason it failed with. */
+    fun retryFailed() {
+        helper.writableDatabase.execSQL(
+            "UPDATE item SET state = ?, error = NULL WHERE state = ?",
+            arrayOf(DownloadState.QUEUED.name, DownloadState.FAILED.name),
         )
         revision++
     }
@@ -111,7 +123,7 @@ class DownloadQueue(context: Context) {
 
     fun all(): List<QueueItem> =
         helper.readableDatabase.rawQuery(
-            "SELECT id, name, size, collection, platform_key, torrent_path, so_id, md5, sha1, state " +
+            "SELECT id, name, size, collection, platform_key, torrent_path, so_id, md5, sha1, state, error " +
                 "FROM item ORDER BY added_at, id",
             null,
         ).use { c ->
@@ -129,6 +141,7 @@ class DownloadQueue(context: Context) {
                             md5 = c.getString(7),
                             sha1 = c.getString(8),
                             state = DownloadState.valueOf(c.getString(9)),
+                            error = c.getString(10),
                         )
                     )
                 }

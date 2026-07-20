@@ -84,6 +84,10 @@ fun QueueScreen(queue: DownloadQueue, destinations: Destinations, onFolders: () 
                 }
                 Spacer(Modifier.width(8.dp))
                 Button(onClick = { DownloadWorker.cancel(context) }) { Text("Stop") }
+                if (items.any { it.state == DownloadState.FAILED }) {
+                    Spacer(Modifier.width(8.dp))
+                    Button(onClick = { queue.retryFailed() }) { Text("Retry failed") }
+                }
             }
         }
         Spacer(Modifier.height(8.dp))
@@ -108,6 +112,13 @@ fun QueueScreen(queue: DownloadQueue, destinations: Destinations, onFolders: () 
                             "${formatSize(queued.size)} · ${queued.state.name.lowercase()} · tap to remove",
                             style = MaterialTheme.typography.bodySmall,
                         )
+                        queued.error?.let {
+                            Text(
+                                it,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                        }
                     }
                 }
             }
