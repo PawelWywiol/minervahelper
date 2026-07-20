@@ -57,9 +57,11 @@ matched, 2 seconds. Details in [progress.md](progress.md).
 - [x] ROM detail screen
 - [x] Smooth scrolling over large lists (the biggest platform has 753k entries) —
       measured on the device: 1 dropped frame out of 1,028
-- [ ] Favourites
+- [x] Favourites — kept as archive paths, so they survive a catalogue rebuild
 - [ ] Release memory when scrolling very far (the list currently keeps every row it
       has loaded)
+- [ ] Confirm the search box can be typed into with the gamepad alone (needs the
+      on-screen keyboard; only tested with injected text so far)
 
 **Done when:** the whole app can be operated with the gamepad alone, and long
 lists scroll without stutter.

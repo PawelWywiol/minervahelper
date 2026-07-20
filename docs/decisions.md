@@ -212,3 +212,21 @@ the start. Counting cost 313 ms per page deep into a list on the device — and 
 on a desktop, so this would have gone unnoticed without testing on real hardware.
 
 **Cost:** a first run now takes about 20 seconds longer.
+
+---
+
+<a id="d13"></a>
+## D13 — Favourites point at a place in the archive, not a row number
+
+**Decision:** a favourite is stored as collection / platform / file name, and the ROM
+is looked up by that path when the list is shown. It is not stored as the catalogue
+row number, even though that would be smaller and faster.
+
+**Why:** row numbers are assigned while converting the archive, in the order files are
+read. Re-importing an updated archive renumbers everything. Favourites stored as row
+numbers would still open — silently showing different games. A wrong answer delivered
+confidently is worse than a slow one.
+
+**Cost:** finding a favourite again is a search by name rather than a direct jump, and
+if the archive ever renames a file, that favourite is lost rather than wrong. Losing it
+is the better failure: it is visible.

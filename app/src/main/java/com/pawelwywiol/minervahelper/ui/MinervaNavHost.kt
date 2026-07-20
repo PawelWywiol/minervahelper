@@ -19,7 +19,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.pawelwywiol.minervahelper.data.catalog.CatalogReader
+import com.pawelwywiol.minervahelper.data.catalog.Favourites
 import com.pawelwywiol.minervahelper.ui.catalog.CollectionsScreen
+import com.pawelwywiol.minervahelper.ui.catalog.FavouritesScreen
 import com.pawelwywiol.minervahelper.ui.catalog.PlatformsScreen
 import com.pawelwywiol.minervahelper.ui.catalog.RomDetailScreen
 import com.pawelwywiol.minervahelper.ui.catalog.RomsScreen
@@ -32,6 +34,8 @@ import java.io.File
 fun MinervaNavHost() {
     val navController = rememberNavController()
     val catalog = rememberCatalog()
+    val context = LocalContext.current
+    val favourites = remember { Favourites(context) }
 
     NavHost(navController, startDestination = "collections") {
         composable("dev") { SpikeScreen() }
@@ -41,6 +45,7 @@ fun MinervaNavHost() {
                     reader = catalog,
                     onOpen = { navController.navigate("platforms/${Uri.encode(it)}") },
                     onSearch = { navController.navigate("search") },
+                    onFavourites = { navController.navigate("favourites") },
                     onDeveloper = { navController.navigate("dev") },
                 )
             }
@@ -65,9 +70,16 @@ fun MinervaNavHost() {
                 SearchScreen(catalog) { navController.navigate("rom/${it.id}") }
             }
         }
+        composable("favourites") {
+            WithCatalog(catalog, navController::navigate) { reader ->
+                FavouritesScreen(reader, favourites) { navController.navigate("rom/${it.id}") }
+            }
+        }
         composable("rom/{romId}") { entry ->
             val romId = entry.arguments?.getString("romId")?.toLongOrNull() ?: 0L
-            WithCatalog(catalog, navController::navigate) { catalog -> RomDetailScreen(catalog, romId) }
+            WithCatalog(catalog, navController::navigate) { reader ->
+                RomDetailScreen(reader, favourites, romId)
+            }
         }
     }
 }

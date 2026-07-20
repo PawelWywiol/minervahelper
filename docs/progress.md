@@ -7,6 +7,25 @@ unresolved. Claims without measurements do not belong here.
 
 ---
 
+## 2026-07-20 — Favourites
+
+A ROM can be marked as a favourite from its detail screen, and the favourites list
+is reachable from the home screen.
+
+**Tested on the device:** marked a ROM, closed the app completely, reopened it — the
+favourite was still there and still pointed at the right ROM. Also marked one from
+MAME, the largest platform, to check that finding a favourite again does not slow
+down on a 753,442-entry platform; the list appeared without a visible delay. That is
+an observation, not a timing — the lookup was not measured in isolation.
+
+**The decision that matters here:** favourites are stored as the ROM's place in the
+archive (collection / platform / file name), not as its row number. Row numbers are
+handed out while converting the archive, so re-importing an updated archive would
+renumber everything and every favourite would silently point at a different game.
+See [decision D13](decisions.md#d13).
+
+---
+
 ## 2026-07-20 — The app can be browsed and searched
 
 The first real screens replaced the developer test screen: a list of collections,

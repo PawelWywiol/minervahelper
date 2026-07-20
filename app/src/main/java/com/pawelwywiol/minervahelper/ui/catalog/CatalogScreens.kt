@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -32,6 +33,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.pawelwywiol.minervahelper.data.catalog.CatalogReader
+import com.pawelwywiol.minervahelper.data.catalog.Favourites
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
@@ -44,6 +46,7 @@ fun CollectionsScreen(
     reader: CatalogReader,
     onOpen: (String) -> Unit,
     onSearch: () -> Unit,
+    onFavourites: () -> Unit,
     onDeveloper: () -> Unit,
 ) {
     var collections by remember { mutableStateOf<List<CatalogReader.Collection>>(emptyList()) }
@@ -52,8 +55,10 @@ fun CollectionsScreen(
     Screen("Collections") {
         Row(modifier = Modifier.padding(horizontal = 16.dp)) {
             Button(onClick = onSearch) { Text("Search") }
-            Spacer(Modifier.fillMaxWidth(0.05f))
-            Button(onClick = onDeveloper) { Text("Developer") }
+            Spacer(Modifier.width(8.dp))
+            Button(onClick = onFavourites) { Text("Favourites") }
+            Spacer(Modifier.width(8.dp))
+            Button(onClick = onDeveloper) { Text("Dev") }
         }
         Spacer(Modifier.height(8.dp))
         FocusedList(collections) { collection, focus ->
@@ -144,13 +149,47 @@ fun SearchScreen(reader: CatalogReader, onOpen: (CatalogReader.Rom) -> Unit) {
 }
 
 @Composable
-fun RomDetailScreen(reader: CatalogReader, romId: Long) {
+fun FavouritesScreen(
+    reader: CatalogReader,
+    favourites: Favourites,
+    onOpen: (CatalogReader.Rom) -> Unit,
+) {
+    val keys = favourites.all()
+    var roms by remember { mutableStateOf<List<CatalogReader.Rom>>(emptyList()) }
+    LaunchedEffect(keys) { roms = withContext(Dispatchers.IO) { keys.mapNotNull(reader::rom) } }
+
+    Screen("Favourites") {
+        if (keys.isEmpty()) {
+            Text("Nothing here yet.", modifier = Modifier.padding(horizontal = 16.dp))
+            return@Screen
+        }
+        FocusedList(roms) { rom, focus ->
+            FocusableRow(onClick = { onOpen(rom) }, modifier = focus) {
+                Text(rom.name, style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    "${rom.collection}/${rom.platformKey} · ${formatSize(rom.size)}",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun RomDetailScreen(reader: CatalogReader, favourites: Favourites, romId: Long) {
     var rom by remember { mutableStateOf<CatalogReader.Rom?>(null) }
     LaunchedEffect(romId) { rom = withContext(Dispatchers.IO) { reader.rom(romId) } }
 
     Screen(rom?.name ?: "…") {
         rom?.let {
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                Button(
+                    onClick = { favourites.toggle(it) },
+                    modifier = Modifier.initialFocus(true),
+                ) {
+                    Text(if (favourites.contains(it)) "Remove from favourites" else "Add to favourites")
+                }
+                Spacer(Modifier.height(16.dp))
                 Detail("Platform", "${it.collection}/${it.platformKey}")
                 Detail("Size", formatSize(it.size))
                 Detail("Torrent", it.torrentPath)
