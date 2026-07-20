@@ -41,7 +41,26 @@ object CatalogSpike {
             hits.take(3).forEach {
                 log("  ${it.name} | ${it.collection}/${it.platformKey} | so=${it.soId} | md5=${it.md5?.take(8)}")
             }
+
+            val collections = timed(log, "collections") { reader.collections() }
+            log("  ${collections.size} collections, biggest=${collections.maxBy { it.fileCount }.name}")
+            val biggest = collections.maxBy { it.fileCount }
+            val platforms = timed(log, "platforms of ${biggest.name}") { reader.platforms(biggest.name) }
+            val topPlatform = platforms.maxBy { it.fileCount }
+            log("  ${platforms.size} platforms, biggest=${topPlatform.key} (${topPlatform.fileCount} files)")
+            var page = timed(log, "browse page 1") { reader.browse(topPlatform.id) }
+            val paging = System.currentTimeMillis()
+            repeat(100) { page = reader.browse(topPlatform.id, after = page.last()) }
+            log("100 sequential pages (5000 rows): ${System.currentTimeMillis() - paging}ms")
+            log("  last row: ${page.last().name}")
         }
         log("CATALOG SPIKE OK")
+    }
+
+    private inline fun <T> timed(log: (String) -> Unit, label: String, block: () -> T): T {
+        val started = System.currentTimeMillis()
+        val result = block()
+        log("$label: ${System.currentTimeMillis() - started}ms")
+        return result
     }
 }

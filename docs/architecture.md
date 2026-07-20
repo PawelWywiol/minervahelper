@@ -32,12 +32,12 @@ converts it into a smaller catalogue of its own:
 
 | | archive | our catalogue |
 |---|---|---|
-| size | 1,759 MB | **395 MB** |
+| size | 1,759 MB | **521 MB** |
 | entries | 2.97M | 2.43M (junk filtered out) |
 
 The savings come from dropping a redundant column, storing checksums compactly
 instead of as text, and not repeating the same folder paths over and over.
-Conversion takes **60 seconds** on the device.
+Conversion takes **80 seconds** on the device.
 
 ## Main parts of the app
 
@@ -65,7 +65,7 @@ this is a single-module project and is meant to stay simple.
 ## Two things worth knowing
 
 **Downloading resumes; catalogue conversion does not.** Fetching 1.64 GB takes about
-11 minutes and resumes from where it stopped. Conversion takes 60 seconds and starts
+11 minutes and resumes from where it stopped. Conversion takes 80 seconds and starts
 over if interrupted — repeating it is cheaper than guarding against a database
 corrupted mid-write. [Rationale](decisions.md#d4).
 

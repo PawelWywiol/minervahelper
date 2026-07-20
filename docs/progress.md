@@ -7,6 +7,42 @@ unresolved. Claims without measurements do not belong here.
 
 ---
 
+## 2026-07-20 — Catalogue rebuilt so browsing is fast
+
+**The problem:** before building the browsing screens, the catalogue was tested for
+the job. It could not do it. Listing one platform's ROMs in alphabetical order made
+the database sort *every* entry of that platform — 753,442 of them for MAME — and it
+did that again for every page of results. The same applied to showing how many files
+each collection holds.
+
+**The change:** each file now records directly which platform it belongs to, the
+per-platform totals are counted once during conversion, and an index keeps the names
+of a platform pre-sorted.
+
+**Measured on the device:**
+
+| Action | Before | After |
+|---|---|---|
+| List collections with totals | 515 ms *(on a fast desktop — worse on device)* | **1 ms** |
+| Open a platform, first page | — | **15 ms** |
+| Scroll 100 pages (5,000 ROMs) | — | **1,249 ms** (12.5 ms per page) |
+
+**What it costs:** the catalogue grew from 395 MB to 521 MB and conversion from 60 to
+80 seconds. Accepted: the device has 100 GB free, and without this the interface
+could not scroll smoothly, which is a requirement.
+
+**A second problem found while measuring.** Jumping deep into a list by counting rows
+from the start took 313 ms per page on the device — while the same query took 4 ms on
+the desktop. Testing only on a desktop would have hidden this completely. Paging now
+continues from the last row shown instead of counting from the beginning, which costs
+the same no matter how deep the user has scrolled.
+
+**Also fixed:** the app now checks which version of the catalogue it has. An older one
+is rebuilt rather than used, because it lacks data the new screens need and would
+fail at an unpredictable moment.
+
+---
+
 ## 2026-07-20 — M2 started: the gamepad blocker is fixed
 
 **The problem:** since M0, a button highlighted on screen would not react to the

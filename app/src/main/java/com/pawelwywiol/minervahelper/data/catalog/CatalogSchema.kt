@@ -2,22 +2,28 @@ package com.pawelwywiol.minervahelper.data.catalog
 
 internal object CatalogSchema {
 
-    const val VERSION = 1
+    const val VERSION = 2
 
     val DDL = listOf(
         "CREATE TABLE IF NOT EXISTS meta(key TEXT PRIMARY KEY, value TEXT NOT NULL)",
         "CREATE TABLE IF NOT EXISTS torrent(id INTEGER PRIMARY KEY, path TEXT NOT NULL, btih BLOB NOT NULL)",
-        "CREATE TABLE IF NOT EXISTS platform(id INTEGER PRIMARY KEY, collection TEXT NOT NULL, platform_key TEXT NOT NULL)",
+        "CREATE TABLE IF NOT EXISTS platform(" +
+            "id INTEGER PRIMARY KEY, collection TEXT NOT NULL, platform_key TEXT NOT NULL," +
+            "file_count INTEGER NOT NULL DEFAULT 0)",
         "CREATE TABLE IF NOT EXISTS dir(id INTEGER PRIMARY KEY, path TEXT NOT NULL, platform_id INTEGER NOT NULL)",
         "CREATE TABLE IF NOT EXISTS file(" +
             "id INTEGER PRIMARY KEY, dir_id INTEGER NOT NULL, name TEXT NOT NULL, size INTEGER NOT NULL," +
-            "torrent_id INTEGER NOT NULL, so_id INTEGER NOT NULL, md5 BLOB, sha1 BLOB, crc32 INTEGER)",
+            "torrent_id INTEGER NOT NULL, so_id INTEGER NOT NULL, md5 BLOB, sha1 BLOB, crc32 INTEGER," +
+            "platform_id INTEGER NOT NULL)",
     )
 
     val INDEXES = listOf(
         "CREATE INDEX IF NOT EXISTS ix_file_torrent ON file(torrent_id)",
         "CREATE INDEX IF NOT EXISTS ix_file_dir ON file(dir_id)",
         "CREATE INDEX IF NOT EXISTS ix_dir_platform ON dir(platform_id)",
+        // Browsing a platform alphabetically. Without it SQLite sorts the whole platform for every
+        // page (753k rows for MAME): measured 68 ms -> 0.03 ms per page, at the cost of ~160 MB.
+        "CREATE INDEX IF NOT EXISTS ix_file_platform_name ON file(platform_id, name)",
     )
 
     const val CREATE_FTS =

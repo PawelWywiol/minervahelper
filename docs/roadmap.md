@@ -44,7 +44,7 @@ matched, 2 seconds. Details in [progress.md](progress.md).
 - [x] Derive platform from the file path
 - [x] Platform → emulator folder mapping (first pass)
 
-**Result:** 11-minute download, 60-second conversion, 395 MB catalogue,
+**Result:** 11-minute download, 80-second conversion, 521 MB catalogue,
 19 ms search. Verified byte-for-byte against a desktop conversion.
 
 ## 🔨 M2 — Interface (in progress)

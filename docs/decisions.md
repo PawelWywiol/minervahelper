@@ -41,13 +41,13 @@ download correctness.
 ## D3 — Convert the archive database instead of using it directly
 
 **Decision:** download the archive's 1.64 GB database once and convert it into our
-own 395 MB catalogue.
+own 521 MB catalogue.
 
 **Why:** the source is too large and too slow to query on a handheld. Conversion
 drops a redundant column, packs checksums compactly and stops repeating identical
 folder paths.
 
-**Cost:** an 11-minute first-run download and 60 seconds of conversion, plus a
+**Cost:** an 11-minute first-run download and 80 seconds of conversion, plus a
 temporary 2.1 GB of disk during the process. Source deleted afterwards.
 
 ---
@@ -62,7 +62,7 @@ conversion always starts from scratch.
 **Why:** conversion runs with database journalling off, which is fast but means an
 interruption can leave a corrupted file. Resuming into a corrupted catalogue would
 produce silently wrong data — wrong checksums lead to failed downloads, and the user
-would have no idea why. At 60 seconds, repeating the work is cheaper than making
+would have no idea why. At 80 seconds, repeating the work is cheaper than making
 resumption safe. The 11-minute download is a different matter, so it resumes
 properly.
 
@@ -191,3 +191,24 @@ and a wrong release year shown confidently is worse than a blank field.
 
 **Future option:** enrich the catalogue from an external metadata source. Out of
 scope for now; not needed for the app to do its job.
+
+---
+
+<a id="d12"></a>
+
+## D12 — A bigger catalogue in exchange for a usable one
+
+**Decision:** store extra data in the catalogue — which platform each file belongs to,
+how many files each platform holds, and a pre-sorted index of names — even though it
+grows the catalogue from 395 MB to 521 MB and conversion from 60 to 80 seconds.
+
+**Why:** without it, opening a platform made the database sort every entry it contains
+(753,442 for the largest) and repeat that for every page. Browsing is not an optional
+extra; if it stutters, the app fails at its main job. The device has 100 GB free, so
+126 MB is a cheap price.
+
+**Related:** paging continues from the last row shown rather than counting rows from
+the start. Counting cost 313 ms per page deep into a list on the device — and only 4 ms
+on a desktop, so this would have gone unnoticed without testing on real hardware.
+
+**Cost:** a first run now takes about 20 seconds longer.
