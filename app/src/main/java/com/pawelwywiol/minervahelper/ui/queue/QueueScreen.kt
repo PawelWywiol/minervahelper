@@ -49,6 +49,7 @@ fun QueueScreen(queue: DownloadQueue, destinations: Destinations, onFolders: () 
     var groups by remember { mutableStateOf<Map<String, List<QueueItem>>>(emptyMap()) }
     var downloaded by remember { mutableStateOf<List<DownloadedItem>>(emptyList()) }
     var confirmRemove by remember { mutableStateOf<QueueItem?>(null) }
+    var confirmForget by remember { mutableStateOf<DownloadedItem?>(null) }
     LaunchedEffect(queue.revision) {
         withContext(Dispatchers.IO) {
             groups = queue.byTorrent()
@@ -167,7 +168,7 @@ fun QueueScreen(queue: DownloadQueue, destinations: Destinations, onFolders: () 
                     )
                 }
                 items(downloaded.take(RECENT_DOWNLOADS), key = { "downloaded-${it.id}" }) { done ->
-                    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
+                    FocusableRow(onClick = { confirmForget = done }) {
                         Text(done.name, style = MaterialTheme.typography.bodyLarge)
                         Text(
                             formatSize(done.size) +
@@ -189,6 +190,28 @@ fun QueueScreen(queue: DownloadQueue, destinations: Destinations, onFolders: () 
                 }
             }
         }
+    }
+
+    confirmForget?.let { done ->
+        AlertDialog(
+            onDismissRequest = { confirmForget = null },
+            title = { Text("Remove from history?") },
+            text = {
+                Text(
+                    "${done.name}\n\nThe file stays where it is — the app just forgets " +
+                        "it was downloaded, and its ✓ disappears from the lists."
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    queue.removeDownloaded(done.id)
+                    confirmForget = null
+                }) { Text("Remove") }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmForget = null }) { Text("Cancel") }
+            },
+        )
     }
 
     confirmRemove?.let { item ->

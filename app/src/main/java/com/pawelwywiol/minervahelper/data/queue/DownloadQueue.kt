@@ -179,6 +179,12 @@ class DownloadQueue(context: Context) {
             }
         }
 
+    /** Forgets a downloaded record; the file itself is untouched. Lists lose their ✓ for it. */
+    fun removeDownloaded(id: Long) {
+        helper.writableDatabase.delete("downloaded", "id = ?", arrayOf(id.toString()))
+        revision++
+    }
+
     fun setDownloadedFolder(id: Long, folder: String) {
         helper.writableDatabase.execSQL(
             "UPDATE downloaded SET folder = ? WHERE id = ?",

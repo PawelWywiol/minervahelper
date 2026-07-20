@@ -109,13 +109,26 @@ class CatalogReader(file: File) : Closeable {
 
     fun search(query: String, limit: Int = 50, offset: Int = 0): List<Rom> {
         val match = toMatchExpression(query) ?: return emptyList()
-        return roms(
+        val hits = roms(
             "FROM file_fts j JOIN file f ON f.id = j.rowid",
             "j.name MATCH ?",
             arrayOf(match),
             limit,
             offset,
         )
+        // Words in a name are not always separated — "zoom amiga" must also find "ZoomAmiga",
+        // so the terms glued together run as a second prefix search.
+        val joined = toJoinedMatchExpression(query) ?: return hits
+        if (hits.size >= limit) return hits
+        val seen = hits.mapTo(HashSet()) { it.id }
+        val extra = roms(
+            "FROM file_fts j JOIN file f ON f.id = j.rowid",
+            "j.name MATCH ?",
+            arrayOf(joined),
+            limit - hits.size,
+            offset = 0,
+        )
+        return hits + extra.filterNot { it.id in seen }
     }
 
     private fun roms(from: String, where: String, args: Array<String>, limit: Int, offset: Int): List<Rom> =
@@ -162,9 +175,19 @@ private fun ByteArray.hex(): String = joinToString("") { "%02x".format(it) }
  * Returns null when nothing searchable remains.
  */
 private fun toMatchExpression(query: String): String? {
-    val terms = query.lowercase().split(Regex("[^\\p{L}\\p{N}]+")).filter { it.isNotEmpty() }
+    val terms = searchTerms(query)
     if (terms.isEmpty()) return null
     return terms.mapIndexed { index, term ->
         if (index == terms.lastIndex) "$term*" else term
     }.joinToString(" ")
 }
+
+/** "zoom amiga" → "zoomamiga*"; null when there is nothing to glue. */
+private fun toJoinedMatchExpression(query: String): String? {
+    val terms = searchTerms(query)
+    if (terms.size < 2) return null
+    return terms.joinToString("") + "*"
+}
+
+private fun searchTerms(query: String): List<String> =
+    query.lowercase().split(Regex("[^\\p{L}\\p{N}]+")).filter { it.isNotEmpty() }

@@ -7,6 +7,39 @@ unresolved. Claims without measurements do not belong here.
 
 ---
 
+## 2026-07-20 — Owner's M7 review fixes, game covers, and release signing
+
+The owner accepted M7 with three fixes, all done and tested on the device:
+
+**Browse is a home button now.** Tapping Browse from deep inside a platform list
+returns to the top-level collections screen instead of restoring the sub-screen.
+
+**Downloaded history can be cleaned.** Tapping an entry in the Queue's Downloaded
+section asks "Remove from history?" and explains the file itself stays. Verified:
+the entry left the registry, the file stayed on the SD card.
+
+**Search is flexible.** Measured on the device: word order, letter case and
+diacritics were already free ("kamera wsrod" finds "Z kamerą wśród ośmiornic" —
+the index folds accents both ways), and glued-together names now match too
+("aerial as" also finds "aerialas.zip" via a second joined-terms query).
+
+**Game info and covers are live ([D21](decisions.md#d21), from the owner's
+metadata request).** The detail pane now shows the canonical title and system from
+an anonymous hash lookup (hasheous.org) and box art from the libretro thumbnail
+server, cached on disk, silent when nothing is found. Verified on the device: a
+No-Intro C64 game showed "Real Ghostbusters, The · Commodore 64" with its real
+box art. Descriptions would need an API key (measured: those endpoints return
+401 anonymously) — left as a future opt-in.
+
+**Release signing is wired and proven.** The build reads `keystore.properties`,
+signs the release APK, and the signed build (34 MB → 31.5 MB shrunk) installed
+and ran on the device — onboarding came up as it should on a fresh install. The
+test used the debug key; the real key is one `keytool` command the owner runs,
+after which `keystore/` and `keystore.properties` must be backed up: updates only
+install when signed with the same key.
+
+---
+
 ## 2026-07-20 — The last M4 box: a downloaded ROM, seen and played in the frontend
 
 The proof came from real use, which beats any staged test. The device's frontend

@@ -94,10 +94,19 @@ fun MinervaNavHost() {
                             selected = if (tab.route == "collections") route in BROWSE_ROUTES
                             else route == tab.route,
                             onClick = {
-                                navController.navigate(tab.route) {
-                                    popUpTo("collections") { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
+                                // Browse is the home button: it always lands on the top-level list,
+                                // even from deep inside a platform (owner's request).
+                                if (tab.route == "collections") {
+                                    navController.navigate("collections") {
+                                        popUpTo("collections") { inclusive = true }
+                                        launchSingleTop = true
+                                    }
+                                } else {
+                                    navController.navigate(tab.route) {
+                                        popUpTo("collections") { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
                                 }
                             },
                             icon = { Icon(tab.icon, contentDescription = tab.label) },

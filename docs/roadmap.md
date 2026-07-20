@@ -139,7 +139,12 @@ entirely on the device.
       27 MB torrent file
 - [x] Network loss during download — tested; it pauses and resumes by itself
 - [x] Release build with code shrinking — tested on device, torrent path intact
-- [ ] Real signing key (owner's to create)
+- [ ] Real signing key — the signing plumbing is done and was proven with a test key
+      2026-07-20 (signed release built, installed and ran); what remains is one
+      `keytool` command the owner runs, then backing up `keystore/` and
+      `keystore.properties` **outside the repository** — both are git-ignored on
+      purpose: they hold the key and its passwords, and a leaked key lets anyone
+      publish updates that look like ours
 - [x] Versioned catalogue re-import (R34) — fully tested on the device 2026-07-20:
       the update banner appeared, the button was pressed, the app downloaded the
       1.76 GB index in ~9 minutes, rebuilt the 521 MB catalogue (2,428,272 files),
@@ -180,7 +185,7 @@ Blocking nothing right now, but they need answers before the relevant stage:
 | Question | Recommendation | Needed by |
 |---|---|---|
 | Fill in the remaining platform mappings (1,006 pairs, 10% of files)? | Add them based on actual usage, not upfront | M4 |
-| Enrich ROMs with game info and cover art from external databases? | Researched 2026-07-20 — hash-first plan in [metadata.md](metadata.md); owner decides if and when | future |
+| Enrich ROMs with game info and cover art from external databases? | First slice shipped 2026-07-20 — title, system and cover on the detail pane ([D21](decisions.md#d21)); descriptions and the offline name database remain in [metadata.md](metadata.md) | future |
 | Where do finished downloads go — vanish, or a "Downloaded" history? | History: keeps the record R37/R38 need anyway, and users can check what they have | M7 |
 | Dark theme only, or light and dark? | Dark-first (matches the device); add light later only if asked | M7 |
 | "Already downloaded" check: name+size, or full checksum? | Name+size, as specified — checksums of a whole library would take minutes | M7 |

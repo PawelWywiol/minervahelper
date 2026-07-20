@@ -25,9 +25,9 @@ First time here? Start with [project.md](project.md).
 The core works end-to-end on the device — browse, search, queue, selective torrent
 download, verification, placement into per-platform folders — and after **M7**
 ([design.md](design.md)) it navigates, behaves and looks like a finished product:
-persistent menu, automatic queue, downloaded markers, dark identity. Stages M2, M3,
-M4 and M5 are fully closed — a game the app downloaded has been found and played in
-the device's frontend. What remains needs the owner: the signing key (M6) and the
-device-in-hand acceptance of M7.
+persistent menu, automatic queue, downloaded markers, dark identity — plus game
+covers and canonical titles on the detail screen. Stages M2–M5 are fully closed and
+the owner's M7 review fixes are in. The one remaining step to a releasable app is
+the owner generating the signing key (one command; the plumbing is tested).
 
 Details in [roadmap.md](roadmap.md) and [progress.md](progress.md).

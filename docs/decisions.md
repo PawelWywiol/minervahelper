@@ -359,3 +359,24 @@ d-pad presses to move its cursor, so a down-press is explicitly routed out of th
 field onto the keys.
 
 **Cost:** a strip of the Search screen is spent on keys that touch users do not need.
+
+---
+
+<a id="d21"></a>
+## D21 — Game info and covers: keyless sources only, silence over errors
+
+**Decision:** the detail pane enriches a ROM from exactly two sources, both free and
+requiring no account: an anonymous hash lookup at hasheous.org (canonical title and
+system) and cover art from the libretro thumbnail server (keyed by game name). Every
+result — hit or miss — is cached on the device, one lookup per ROM ever. When nothing
+is found, or the device is offline, the pane silently shows only what the archive
+knows; enrichment may never produce an error the user has to deal with.
+
+**Why:** the alternatives all require credentials — ScreenScraper wants a per-user
+account, IGDB direct needs a server secret, and even Hasheous's richer proxy endpoints
+(descriptions) turned out to demand an API key when measured. Metadata is decoration
+here, not function, and decoration is not worth a login screen.
+
+**Cost:** no game descriptions for now (would need an API key — a future opt-in), and
+covers miss when a file name differs from the thumbnail server's naming (TOSEC's
+decorated names often miss where No-Intro's clean names hit).

@@ -1,5 +1,7 @@
 package com.pawelwywiol.minervahelper.ui.catalog
 
+import android.graphics.BitmapFactory
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -35,6 +37,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -46,6 +49,8 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import com.pawelwywiol.minervahelper.data.catalog.CatalogReader
 import com.pawelwywiol.minervahelper.data.catalog.CatalogSync
+import com.pawelwywiol.minervahelper.data.metadata.GameInfo
+import com.pawelwywiol.minervahelper.data.metadata.GameInfoLookup
 import com.pawelwywiol.minervahelper.data.catalog.Favourites
 import com.pawelwywiol.minervahelper.data.placement.Destinations
 import com.pawelwywiol.minervahelper.data.placement.FilePlacement
@@ -356,7 +361,31 @@ private fun RomDetailPane(
                 val scope = rememberCoroutineScope()
                 val inQueue = remember(queue.revision, it.id) { queue.contains(it) }
                 val downloaded = remember(queue.revision, it.id) { queue.isDownloaded(it) }
+                val lookup = remember { GameInfoLookup(context, OkHttpClient()) }
+                var info by remember(it.id) { mutableStateOf<GameInfo?>(null) }
+                LaunchedEffect(it.id) { info = lookup.lookup(it) }
                 Text(it.name, style = MaterialTheme.typography.titleMedium)
+                info?.takeUnless { i -> i.isEmpty }?.let { i ->
+                    i.title?.let { title ->
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            title + (i.system?.let { s -> " · $s" } ?: ""),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    i.cover?.let { file ->
+                        val bitmap = remember(file.path) { BitmapFactory.decodeFile(file.path) }
+                        bitmap?.let { b ->
+                            Spacer(Modifier.height(8.dp))
+                            Image(
+                                b.asImageBitmap(),
+                                contentDescription = "Cover",
+                                modifier = Modifier.height(180.dp),
+                            )
+                        }
+                    }
+                }
                 if (downloaded) {
                     Spacer(Modifier.height(4.dp))
                     Text(

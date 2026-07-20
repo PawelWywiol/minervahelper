@@ -1,9 +1,15 @@
 # Game metadata and cover art — research notes
 
-Status: **researched 2026-07-20, not planned into any milestone yet.** The archive
-itself carries no game descriptions or images (see the R5 note in
-[requirements.md](requirements.md)); this file records where they could come from
-if the owner decides to add them.
+Status: **first slice shipped 2026-07-20** — the detail pane shows canonical title,
+system and cover art (R41, [D21](decisions.md#d21)) from the two keyless sources
+below. Still open: game descriptions (need an API key) and the offline
+hash-to-name database. The archive itself carries no game descriptions or images
+(see the R5 note in [requirements.md](requirements.md)).
+
+One correction from implementation: Hasheous's metadata *proxy* endpoints
+(descriptions, IGDB covers) turned out to require an API key — only the plain
+hash lookup is anonymous. And No-Intro zip hashes do match its signatures, so
+coverage is better than the research below feared; TOSEC zips still miss.
 
 ## What we have to search with
 

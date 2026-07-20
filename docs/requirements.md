@@ -89,6 +89,7 @@ a downloaded ROM as a program anyway. The limitation is spelled out in
 | R38 | A file already in the destination (same name and size) counts as downloaded | ✅ | M7 |
 | R39 | Changing a folder asks whether to move already-downloaded files | ✅ | M7 |
 | R40 | **Finished-product look: navigation, visual identity, affordances, guidance** | ✅ | M7 |
+| R41 | Game title, system and cover art on the detail screen | ✅ | — |
 
 **R36–R40 — added 2026-07-20** after the owner reviewed the working app. The full
 audit and the plan behind them: [design.md](design.md). R40 in one sentence: the user
@@ -156,6 +157,7 @@ Not in the original brief; they emerged from reality or from later clarification
 | R18 | Fallback folder for unmapped platforms | See above |
 | R35 | Live download / queue / storage statistics | Added 2026-07-20 |
 | R36–R40 | Automatic queue, downloaded markers, folder-move prompt, finished-product look | Owner's review of the working app, 2026-07-20 — see [design.md](design.md) |
+| R41 | Game info + cover art, keyless and cached ([D21](decisions.md#d21)) | Owner's request 2026-07-20; research in [metadata.md](metadata.md) |
 
 ## Dropped requirements
 
