@@ -13,6 +13,7 @@ First time here? Start with [project.md](project.md).
 | [project.md](project.md) | What Minerva Helper is, the problem it solves, who it is for |
 | [requirements.md](requirements.md) | What the app must do, with the status of each requirement |
 | [architecture.md](architecture.md) | How the app is built — in plain terms, with a flow diagram |
+| [design.md](design.md) | UX/UI audit of the working app and the redesign plan |
 | [roadmap.md](roadmap.md) | The plan: stages, what is done, what comes next |
 | [progress.md](progress.md) | Work log: what was done when, with measured results |
 | [decisions.md](decisions.md) | Important decisions and **why** they were made |
@@ -20,8 +21,8 @@ First time here? Start with [project.md](project.md).
 
 ## Project status in one sentence
 
-Stages **M0** (skeleton plus proof that selective torrent downloading works) and
-**M1** (a 2.4-million-file catalogue running on the device) are complete.
-Next up: **M2 — the user interface**.
+The core works end-to-end on the device — browse, search, queue, selective torrent
+download, verification, placement into per-platform folders. Next up: **M7 — the
+user experience overhaul** ([design.md](design.md)); loose ends remain in M2–M6.
 
 Details in [roadmap.md](roadmap.md) and [progress.md](progress.md).

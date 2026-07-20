@@ -16,6 +16,7 @@ Last updated: 2026-07-20
 | **M4** | File placement, verification, platform mapping | 🟡 |
 | **M5** | Onboarding, settings, battery | 🟡 |
 | **M6** | Hardening and release | 🟡 |
+| **M7** | **User experience overhaul** — navigation, automatic queue, visual identity | ⬜ **next** |
 
 ---
 
@@ -121,6 +122,29 @@ entirely on the device.
 - [ ] Real signing key (owner's to create)
 - [x] Versioned catalogue re-import (R34) — detection tested; the rebuild button itself not yet pressed
 
+## ⬜ M7 — User experience overhaul (next)
+
+Added 2026-07-20 after the owner reviewed the working app: it works, but it looks and
+behaves like a prototype. Full audit and rationale in [design.md](design.md).
+Four packages, in order — structure before paint:
+
+- [ ] **Structure:** top bar with a back button on every screen; persistent bottom
+      menu (Browse · Search · Favourites · Queue · Settings); Dev screen hidden in
+      release; use the landscape screen instead of one left-pinned column
+- [ ] **Behaviour:** downloads start automatically on queueing (R36); finished items
+      leave the queue and browse lists mark what is downloaded (R37); files already
+      in the destination count as downloaded (R38); folder change offers to move
+      existing files (R39)
+- [ ] **Identity:** dark-first colour scheme for a gaming handheld, list rows with
+      separation, icons and status badges, real progress bars, typographic hierarchy
+- [ ] **Guidance:** everything tappable looks tappable (folder rows especially);
+      destructive actions confirmed or undoable (queue's tap-to-delete must go);
+      one line of help where a first-timer needs it; friendly empty states
+
+**Done when:** a person who has never seen the app finds a game, downloads it and
+knows it succeeded — without instructions, by touch alone; and the same flow works
+by D-pad alone. Tested with the device in hand, screen by screen.
+
 ---
 
 ## Open questions
@@ -130,3 +154,6 @@ Blocking nothing right now, but they need answers before the relevant stage:
 | Question | Recommendation | Needed by |
 |---|---|---|
 | Fill in the remaining platform mappings (1,006 pairs, 10% of files)? | Add them based on actual usage, not upfront | M4 |
+| Where do finished downloads go — vanish, or a "Downloaded" history? | History: keeps the record R37/R38 need anyway, and users can check what they have | M7 |
+| Dark theme only, or light and dark? | Dark-first (matches the device); add light later only if asked | M7 |
+| "Already downloaded" check: name+size, or full checksum? | Name+size, as specified — checksums of a whole library would take minutes | M7 |

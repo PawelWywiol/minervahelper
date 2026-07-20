@@ -7,6 +7,29 @@ unresolved. Claims without measurements do not belong here.
 
 ---
 
+## 2026-07-20 — The owner reviewed the app: it works, but it feels like a prototype
+
+The owner used the working app and set new guidelines: no way back between screens,
+no menu, lists blur into a wall of text, nothing marks what is downloaded, tappable
+things don't look tappable, and the default template styling looks nothing like a
+finished product. The device's touchscreen deserves to be a first-class input next
+to the gamepad.
+
+**What was done today:** a UX/UI audit against screenshots from the device — written
+up in [design.md](design.md), the new home for design decisions. Five new
+requirements (R36–R40): automatic background downloading of whatever is queued,
+finished items leaving the queue, downloaded markers in the browse lists (including
+files already present in the destination folder), a move-or-leave question when a
+folder changes, and the finished-product look itself. A new stage **M7 — user
+experience overhaul** plans the work in four packages: structure, behaviour,
+identity, guidance.
+
+Stale requirement statuses were also corrected (R3, R5–R7, R10, R11, R14, R35 were
+long done and tested, but still listed as planned).
+
+**No code changed today under this heading** — this entry records the review, the
+audit and the plan.
+
 ## 2026-07-20 — Edge cases: the 305,150-file torrent and zero-byte files
 
 Two edge cases from the hardening list, both tested on the device.

@@ -16,10 +16,10 @@ Last updated: 2026-07-20
 |---|---|---|---|
 | R1 | Full archive catalogue available on the device | ✅ | M1 |
 | R2 | Search by name, responding as the user types | ✅ | M1 |
-| R3 | Browse the catalogue by collection and platform | ⬜ | M2 |
+| R3 | Browse the catalogue by collection and platform | ✅ | M2 |
 | R4 | Filter results (type, size) | ⬜ | M2 |
-| R5 | ROM detail screen (size, platform, checksums) | ⬜ | M2 |
-| R6 | Favourites list | ⬜ | M2 |
+| R5 | ROM detail screen (size, platform, checksums) | ✅ | M2 |
+| R6 | Favourites list | ✅ | M2 |
 
 **R5 — scope:** the detail screen shows only what the archive actually holds — name,
 size, platform, checksums, source torrent.
@@ -33,19 +33,19 @@ possible future feature, out of scope for now.
 
 | ID | Requirement | Status | Stage |
 |---|---|---|---|
-| R7 | Select multiple ROMs at once | ⬜ | M3 |
+| R7 | Select multiple ROMs at once | ✅ | M3 |
 | R8 | Fetch the `.torrent` file assigned to a ROM | ✅ | M0 |
 | R9 | **Download only the selected files from a torrent** (the core of the project) | ✅ | M0 |
-| R10 | Group selected ROMs by torrent (one torrent = one job) | ⬜ | M3 |
-| R11 | Background download queue | ⬜ | M3 |
-| R12 | Pause / resume / cancel at any time | ⬜ | M3 |
-| R13 | Resume after the app is closed and after a device reboot | ⬜ | M3 |
+| R10 | Group selected ROMs by torrent (one torrent = one job) | ✅ | M3 |
+| R11 | Background download queue (automatic start is R36) | ✅ | M3 |
+| R12 | Pause / resume / cancel at any time | 🔨 | M3 |
+| R13 | Resume after the app is closed and after a device reboot | 🔨 | M3 |
 
 ## Storing files
 
 | ID | Requirement | Status | Stage |
 |---|---|---|---|
-| R14 | Pick a root folder on the device | ⬜ | M4 |
+| R14 | Pick a root folder on the device | ✅ | M4 |
 | R15 | Per-platform subfolders with sensible default names | ✅ | M4 |
 | R16 | User can change the destination folder for any platform | ✅ | M4 |
 | R17 | Automatic detection of a ROM's platform | ✅ | M1 |
@@ -74,11 +74,22 @@ a downloaded ROM as a program anyway. The limitation is spelled out in
 
 | ID | Requirement | Status | Stage |
 |---|---|---|---|
-| R22 | Intuitive interface, legible on a small screen | ⬜ | M2 |
-| R23 | **Full D-pad / gamepad operation, no touch required** | ⬜ | M2 |
+| R22 | Intuitive interface, legible on a small screen | 🔨 | M7 |
+| R23 | **Full D-pad / gamepad operation, no touch required** | 🔨 | M2 |
 | R24 | Clear download progress and notifications | 🔨 | M3 |
 | R25 | First-run onboarding | ✅ | M5 |
-| R35 | **Live statistics while queueing and downloading** | ⬜ | M3 |
+| R35 | **Live statistics while queueing and downloading** | ✅ | M3 |
+| R36 | Downloads start automatically when something is queued | ⬜ | M7 |
+| R37 | Finished downloads leave the queue; browse lists mark what is downloaded | ⬜ | M7 |
+| R38 | A file already in the destination (same name and size) counts as downloaded | ⬜ | M7 |
+| R39 | Changing a folder asks whether to move already-downloaded files | ⬜ | M7 |
+| R40 | **Finished-product look: navigation, visual identity, affordances, guidance** | ⬜ | M7 |
+
+**R36–R40 — added 2026-07-20** after the owner reviewed the working app. The full
+audit and the plan behind them: [design.md](design.md). R40 in one sentence: the user
+always knows where they are, where they can go, what the app is doing, and what will
+happen if they tap — with a visual identity that suits a gaming handheld, not a
+template demo. Touch and gamepad are both first-class (the device has a touchscreen).
 
 **R23 — warning:** stage M0 revealed that a focused button **does not respond** to
 the gamepad action button. This must be solved in M2, otherwise the app is unusable
@@ -134,6 +145,7 @@ Not in the original brief; they emerged from reality or from later clarification
 | R34 | Re-import the catalogue when the archive is updated | The archive changes; new versions must be detected — implemented 2026-07-20 |
 | R18 | Fallback folder for unmapped platforms | See above |
 | R35 | Live download / queue / storage statistics | Added 2026-07-20 |
+| R36–R40 | Automatic queue, downloaded markers, folder-move prompt, finished-product look | Owner's review of the working app, 2026-07-20 — see [design.md](design.md) |
 
 ## Dropped requirements
 

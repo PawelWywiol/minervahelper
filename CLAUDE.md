@@ -14,6 +14,7 @@ Read **`docs/README.md`** — the documentation index. Then, as needed:
 | What is this project and why? | `docs/project.md` |
 | What must the app do? | `docs/requirements.md` |
 | How is it built? | `docs/architecture.md` |
+| How should it look and feel? | `docs/design.md` |
 | What is left to do? | `docs/roadmap.md` |
 | What is done and measured? | `docs/progress.md` |
 | Why was it done this way? | `docs/decisions.md` |
