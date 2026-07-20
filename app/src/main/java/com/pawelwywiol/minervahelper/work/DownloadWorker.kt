@@ -101,6 +101,11 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
 
             val info = TorrentInfo(torrent)
             items.forEach { verifyAndPlace(it, File(stagingDir, info.files().filePath(it.soId))) }
+            // libtorrent leaves a .parts scratch file and the torrent's directory tree behind. They
+            // are dead once the wanted files are placed, and nothing else clears them — measured at
+            // 8 MB after a single 54 MB download. Only on the success path: an interrupted download
+            // keeps its partial data, which is what lets it resume.
+            stagingDir.deleteRecursively()
         } catch (cancelled: CancellationException) {
             items.forEach { queue.setState(it.id, DownloadState.QUEUED) }
             throw cancelled

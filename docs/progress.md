@@ -7,6 +7,43 @@ unresolved. Claims without measurements do not belong here.
 
 ---
 
+## 2026-07-20 — Losing Wi-Fi mid-download turns out to be a pause, not a failure
+
+Tested for real: a 54.5 MB download was started and the device's Wi-Fi was switched
+off at 67%, then switched back on.
+
+**What happened.** The queue put both items back to "queued" — no error, no lost work.
+When Wi-Fi returned, the download resumed by itself from where it stopped and
+finished. Both files were verified and placed:
+
+| | |
+|---|---|
+| `Front Line (1983)(Nidecom Carry Soft)(JP).zip` | 31,798,343 B → `sharp-mz-2000-mz-2200` |
+| `Fantasian (1985)(Xtal Soft)(JP)[poss. X1 Turbo only].zip` | 22,727,819 B → `x1` |
+| MD5, both files | matched the archive |
+| File content shared | 0 B |
+| Peak speed | 5.0 MB/s, 7 seeds |
+
+**Why there is no "no connection" message here.** Large downloads only run on an
+unmetered network, so when Wi-Fi disappears the system stops the download rather than
+letting it fail — and stopping is already handled as "put it back in the queue". The
+error message written for lost connections therefore does not appear in this case, and
+should not: this is a pause, and calling it a failure would be wrong. That message
+still covers failures where the network is present but the archive cannot be reached.
+
+**A real leak was found and fixed while measuring this.** The torrent engine leaves a
+scratch file and the torrent's folder tree in the app's private storage after the
+wanted files are taken out — 8 MB left over from a single 54 MB download, growing with
+every download and never cleaned by anything. Staging is now cleared once files are
+placed, but *only* after a successful download: an interrupted one keeps its partial
+data, which is exactly what let the test above resume. Verified afterwards: the staging
+folder no longer exists once a run finishes.
+
+**Three ROMs have now been placed into three different platform folders**, each
+checksum-matched. That is the M4 path working repeatedly, not once.
+
+---
+
 ## 2026-07-20 — A failed download now says why, and can be retried
 
 Until now a download that failed showed the word "failed" and nothing else. The user

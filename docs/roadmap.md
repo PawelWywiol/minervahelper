@@ -113,7 +113,7 @@ entirely on the device.
 - [x] Clear error messages, with a way back (retry)
 - [x] Free-space check before a torrent starts
 - [ ] Edge cases: a 305k-file torrent, zero-byte files
-- [ ] Network loss during download — classified in code, not yet tested for real
+- [x] Network loss during download — tested; it pauses and resumes by itself
 - [ ] Release build with code shrinking
 - [ ] Versioned catalogue re-import (R34)
 
