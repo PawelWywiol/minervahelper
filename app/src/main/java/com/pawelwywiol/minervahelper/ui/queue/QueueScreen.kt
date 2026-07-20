@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,6 +25,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.pawelwywiol.minervahelper.data.queue.DownloadQueue
 import com.pawelwywiol.minervahelper.data.queue.DownloadState
+import com.pawelwywiol.minervahelper.data.placement.Destinations
 import com.pawelwywiol.minervahelper.data.queue.QueueItem
 import com.pawelwywiol.minervahelper.ui.FocusableRow
 import com.pawelwywiol.minervahelper.ui.Screen
@@ -34,7 +36,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Composable
-fun QueueScreen(queue: DownloadQueue) {
+fun QueueScreen(queue: DownloadQueue, destinations: Destinations, onFolders: () -> Unit) {
     val context = LocalContext.current
     var groups by remember { mutableStateOf<Map<String, List<QueueItem>>>(emptyMap()) }
     LaunchedEffect(queue.revision) { groups = withContext(Dispatchers.IO) { queue.byTorrent() } }
@@ -63,10 +65,19 @@ fun QueueScreen(queue: DownloadQueue) {
                     color = MaterialTheme.colorScheme.primary,
                 )
             }
+            if (destinations.root == null) {
+                Text(
+                    "No destination folder chosen — nothing can be saved",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
+                TextButton(onClick = onFolders) { Text("Choose folder") }
+            }
             Spacer(Modifier.height(8.dp))
             Row {
                 Button(
-                    enabled = items.any { it.state != DownloadState.DONE },
+                    enabled = destinations.root != null &&
+                        items.any { it.state != DownloadState.DONE },
                     onClick = { DownloadWorker.enqueue(context) },
                 ) {
                     Text("Download")

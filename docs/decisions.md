@@ -254,3 +254,38 @@ refuses the result if a single byte of file content went out.
 **Cost:** the device is visible to the swarm while downloading. If that ever becomes
 unacceptable, the alternative is to obtain files over plain HTTPS instead — which the
 archive does not currently offer.
+
+---
+
+<a id="d15"></a>
+## D15 — The destination is a folder the user grants, not a path the app picks
+
+**Decision:** the user chooses one root folder through Android's own folder picker, and
+the app writes only inside it. Downloaded files are then copied there, one subfolder per
+platform.
+
+**Why:** an emulator's folders belong to the emulator, not to us. The alternative —
+asking for permission to read and write all files on the device — is a far larger demand
+than "put ROMs where I tell you", and it would have to be justified to the user on a
+screen where the honest answer is "so we can write into one folder". The picker grants
+exactly that one folder, and Android remembers the grant across restarts.
+
+**Cost:** files must be copied out of private storage rather than moved, so a large ROM
+is briefly written twice. Copying is also the reason verification happens first: only a
+file that has already matched its checksum is worth the second write.
+
+---
+
+<a id="d16"></a>
+## D16 — An unmappable platform gets a guessed folder, not a refusal
+
+**Decision:** where a platform has no folder in the emulator standard, the archive's own
+name is cleaned up and used, and the screen marks it as "no standard folder".
+
+**Why:** 507 of the archive's 1,591 platforms have a standard folder, covering 68% of
+files. Refusing the rest would make a third of the archive undownloadable to protect the
+user from a folder name. A ROM in an oddly named folder is still playable — the user can
+rename the folder, and the app remembers it.
+
+**Cost:** the default is sometimes wrong, so the screen has to admit which names are
+guesses rather than presenting all of them with equal confidence.

@@ -7,6 +7,54 @@ unresolved. Claims without measurements do not belong here.
 
 ---
 
+## 2026-07-20 — Downloaded ROMs now land in a real folder
+
+Until now a finished download stayed inside the app's private storage, where no
+emulator can see it. That gap is closed.
+
+**The user picks one root folder.** The app asks Android's own folder picker for it,
+so it gets access to that folder and nothing else — no blanket permission to read the
+whole device. The choice survives a restart; verified by force-stopping the app and
+reopening it, the folder was still `primary:Download`.
+
+**Each platform gets its own subfolder,** named the way emulator frontends expect.
+The names come from the mapping table shipped with the app: of its 1,591 platforms,
+507 have a standard folder, and those cover 68% of all files in the archive. A platform with no standard folder keeps a tidied-up
+name from the archive instead of being refused — this is requirement R18, and without
+it roughly a third of the archive would be undownloadable. Seen on the device: the
+MAME platform is offered `arcade`, while `Panic/Playdate` gets `panic-playdate` and is
+labelled "no standard folder" so the user knows it is a guess.
+
+**Any of those names can be changed.** Renaming `panic-playdate` to `playdate` on the
+device took effect immediately and survived a restart.
+
+**Nothing is moved until the checksum matches.** Files are written to private storage
+while downloading and copied out only after verification (R21), so a corrupt or
+half-finished file can never appear in a folder the emulator scans. A file that fails
+verification is now deleted rather than kept — left in place it would be mistaken for
+a finished download next time.
+
+**Measured, end to end.** One ROM, `SynkDate (2023-09-01)(kurogedelic).zip`:
+
+| | |
+|---|---|
+| Landed in | `/sdcard/Download/panic-playdate/` |
+| Size | 41,862 B |
+| MD5 on the device | `05b119c37aff439c1417c1d245f7be85` |
+| MD5 published by the archive | `05b119c37aff439c1417c1d245f7be85` |
+| File content shared with others | 0 B |
+| Staging area afterwards | empty |
+
+**Downloading is refused outright if no folder has been chosen.** Fetching gigabytes
+and only then discovering there is nowhere to put them wastes the user's bandwidth and
+hides the real problem behind a failed item.
+
+*Not yet done in M4:* confirming a placed ROM actually appears and launches in the
+emulator frontend. That was tested into `Download`, deliberately, rather than writing
+into the owner's real ROM library without asking.
+
+---
+
 ## 2026-07-20 — Live progress, and the queue survives being killed
 
 Three things were added and checked on the device.

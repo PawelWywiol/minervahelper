@@ -55,6 +55,7 @@ fun CollectionsScreen(
     onSearch: () -> Unit,
     onFavourites: () -> Unit,
     onQueue: () -> Unit,
+    onFolders: () -> Unit,
     onDeveloper: () -> Unit,
 ) {
     var collections by remember { mutableStateOf<List<CatalogReader.Collection>>(emptyList()) }
@@ -67,6 +68,8 @@ fun CollectionsScreen(
             Button(onClick = onFavourites) { Text("Favourites") }
             Spacer(Modifier.width(8.dp))
             Button(onClick = onQueue) { Text("Queue") }
+            Spacer(Modifier.width(8.dp))
+            Button(onClick = onFolders) { Text("Folders") }
             Spacer(Modifier.width(8.dp))
             Button(onClick = onDeveloper) { Text("Dev") }
         }

@@ -46,10 +46,10 @@ possible future feature, out of scope for now.
 | ID | Requirement | Status | Stage |
 |---|---|---|---|
 | R14 | Pick a root folder on the device | ⬜ | M4 |
-| R15 | Per-platform subfolders with sensible default names | ⬜ | M4 |
-| R16 | User can change the destination folder for any platform | ⬜ | M4 |
+| R15 | Per-platform subfolders with sensible default names | ✅ | M4 |
+| R16 | User can change the destination folder for any platform | ✅ | M4 |
 | R17 | Automatic detection of a ROM's platform | ✅ | M1 |
-| R18 | Handle ROMs that cannot be assigned to a platform | ⬜ | M4 |
+| R18 | Handle ROMs that cannot be assigned to a platform | ✅ | M4 |
 
 **R17 — how it works:** the archive has no "platform" column, so it is derived from
 the file path. **R18 follows from that and is mandatory:** 21% of the archive is not
@@ -63,7 +63,7 @@ the archive. See [decisions.md](decisions.md#d5).
 |---|---|---|---|
 | R19 | Verify the integrity of every file before saving it | ✅ | M0 |
 | R20 | HTTPS only; cleartext traffic blocked | ✅ | M0 |
-| R21 | Files reach the user's folder only after verification | ⬜ | M4 |
+| R21 | Files reach the user's folder only after verification | ✅ | M4 |
 
 **R19 — scope:** we check that a file **is what it claims to be** (MD5/SHA-1
 checksum from the archive). This is not virus scanning — Android will not execute

@@ -16,6 +16,8 @@ import com.pawelwywiol.minervahelper.data.download.TorrentCache
 import com.pawelwywiol.minervahelper.data.download.md5
 import com.pawelwywiol.minervahelper.data.queue.DownloadQueue
 import com.pawelwywiol.minervahelper.data.queue.DownloadState
+import com.pawelwywiol.minervahelper.data.placement.Destinations
+import com.pawelwywiol.minervahelper.data.placement.FilePlacement
 import com.pawelwywiol.minervahelper.data.queue.QueueItem
 import kotlinx.coroutines.CancellationException
 import okhttp3.OkHttpClient
@@ -37,9 +39,17 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
     private val torrents by lazy {
         TorrentCache(File(applicationContext.filesDir, "torrents"), OkHttpClient())
     }
+    private val destinations by lazy { Destinations.get(applicationContext) }
+    private val placement by lazy { FilePlacement(applicationContext) }
 
     override suspend fun doWork(): Result {
         Notifications.ensureChannels(applicationContext)
+        // Checked before anything is fetched: downloading gigabytes only to have nowhere to put them
+        // wastes the user's bandwidth and hides the real problem behind a failed item.
+        if (destinations.root == null) {
+            Log.e(TAG, "no destination folder chosen")
+            return Result.failure()
+        }
         queue.resetInterrupted()
         val pending = queue.byTorrent()
             .mapValues { (_, items) -> items.filter { it.state != DownloadState.DONE } }
@@ -79,7 +89,7 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
             }
 
             val info = TorrentInfo(torrent)
-            items.forEach { verify(it, File(stagingDir, info.files().filePath(it.soId))) }
+            items.forEach { verifyAndPlace(it, File(stagingDir, info.files().filePath(it.soId))) }
         } catch (cancelled: CancellationException) {
             items.forEach { queue.setState(it.id, DownloadState.QUEUED) }
             throw cancelled
@@ -91,13 +101,28 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
         }
     }
 
-    private fun verify(item: QueueItem, file: File) {
+    private fun verifyAndPlace(item: QueueItem, file: File) {
         queue.setState(item.id, DownloadState.VERIFYING)
         val expected = item.md5
         val actual = if (file.isFile) file.md5() else null
-        val ok = file.isFile && file.length() == item.size && (expected == null || expected == actual)
-        if (!ok) Log.e(TAG, "verification failed for ${item.name}: expected $expected, got $actual")
-        queue.setState(item.id, if (ok) DownloadState.DONE else DownloadState.FAILED)
+        if (!file.isFile || file.length() != item.size || (expected != null && expected != actual)) {
+            Log.e(TAG, "verification failed for ${item.name}: expected $expected, got $actual")
+            // A file that failed its checksum is deleted rather than kept: left in staging it would
+            // be mistaken for a finished download on the next run.
+            file.delete()
+            queue.setState(item.id, DownloadState.FAILED)
+            return
+        }
+        queue.setState(item.id, if (place(item, file)) DownloadState.DONE else DownloadState.FAILED)
+    }
+
+    private fun place(item: QueueItem, file: File): Boolean {
+        val root = destinations.root ?: return false
+        val folder = destinations.folderFor(item.collection, item.platformKey)
+        return runCatching { placement.place(root, folder, item.name, file) }
+            .onSuccess { Log.i(TAG, "placed ${item.name} in $folder") }
+            .onFailure { Log.e(TAG, "cannot place ${item.name} in $folder", it) }
+            .isSuccess
     }
 
     private suspend fun report(label: String, percent: Int) = setForeground(

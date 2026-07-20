@@ -13,7 +13,7 @@ Last updated: 2026-07-20
 | **M1** | Catalogue: download, conversion, search | ✅ **done** |
 | **M2** | Interface: browsing, search, details, favourites | 🔨 in progress |
 | **M3** | Download queue and engine | 🔨 in progress |
-| **M4** | File placement, verification, platform mapping | ⬜ |
+| **M4** | File placement, verification, platform mapping | 🟡 |
 | **M5** | Onboarding, settings, battery | ⬜ |
 | **M6** | Hardening and release | ⬜ |
 
@@ -85,13 +85,14 @@ lists scroll without stutter.
 the queue survives being killed and rebooted, and the user can see at a glance what
 is downloading, how fast, and whether it will fit.
 
-## ⬜ M4 — File placement and verification
+## 🟡 M4 — File placement and verification
 
-- [ ] Root folder picker
-- [ ] Editable platform → folder mapping
-- [ ] Flow for unmapped platforms (R18)
-- [ ] Verify, then move into place
-- [ ] Free-space check before starting
+- [x] Root folder picker (Storage Access Framework, survives a restart)
+- [x] Editable platform → folder mapping
+- [x] Flow for unmapped platforms (R18) — cleaned-up archive name, marked as a guess
+- [x] Verify, then move into place
+- [x] Free-space check before starting
+- [ ] Confirm a placed ROM appears and launches in the emulator frontend
 
 **Done when:** a downloaded ROM lands in the right folder and launches in an
 emulator frontend; a corrupted file is rejected with a retry offered.

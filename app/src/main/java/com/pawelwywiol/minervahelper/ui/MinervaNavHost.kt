@@ -20,6 +20,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.pawelwywiol.minervahelper.data.catalog.CatalogReader
 import com.pawelwywiol.minervahelper.data.catalog.Favourites
+import com.pawelwywiol.minervahelper.data.placement.Destinations
 import com.pawelwywiol.minervahelper.data.queue.DownloadQueue
 import com.pawelwywiol.minervahelper.ui.catalog.CollectionsScreen
 import com.pawelwywiol.minervahelper.ui.catalog.FavouritesScreen
@@ -28,6 +29,7 @@ import com.pawelwywiol.minervahelper.ui.catalog.RomDetailScreen
 import com.pawelwywiol.minervahelper.ui.catalog.RomsScreen
 import com.pawelwywiol.minervahelper.ui.catalog.SearchScreen
 import com.pawelwywiol.minervahelper.ui.queue.QueueScreen
+import com.pawelwywiol.minervahelper.ui.settings.FoldersScreen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -39,6 +41,7 @@ fun MinervaNavHost() {
     val context = LocalContext.current
     val favourites = remember { Favourites(context) }
     val queue = remember { DownloadQueue.get(context) }
+    val destinations = remember { Destinations.get(context) }
 
     NavHost(navController, startDestination = "collections") {
         composable("dev") { SpikeScreen() }
@@ -50,6 +53,7 @@ fun MinervaNavHost() {
                     onSearch = { navController.navigate("search") },
                     onFavourites = { navController.navigate("favourites") },
                     onQueue = { navController.navigate("queue") },
+                    onFolders = { navController.navigate("folders") },
                     onDeveloper = { navController.navigate("dev") },
                 )
             }
@@ -74,7 +78,10 @@ fun MinervaNavHost() {
                 SearchScreen(catalog) { navController.navigate("rom/${it.id}") }
             }
         }
-        composable("queue") { QueueScreen(queue) }
+        composable("queue") {
+            QueueScreen(queue, destinations) { navController.navigate("folders") }
+        }
+        composable("folders") { FoldersScreen(destinations, queue) }
         composable("favourites") {
             WithCatalog(catalog, navController::navigate) { reader ->
                 FavouritesScreen(reader, favourites) { navController.navigate("rom/${it.id}") }
