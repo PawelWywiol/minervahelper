@@ -36,7 +36,7 @@ import kotlinx.coroutines.withContext
 private data class PlatformRow(val collection: String, val platformKey: String, val count: Int)
 
 @Composable
-fun FoldersScreen(destinations: Destinations, queue: DownloadQueue) {
+fun FoldersScreen(destinations: Destinations, queue: DownloadQueue, onDev: (() -> Unit)? = null) {
     val context = LocalContext.current
     var editing by remember { mutableStateOf<PlatformRow?>(null) }
 
@@ -60,7 +60,7 @@ fun FoldersScreen(destinations: Destinations, queue: DownloadQueue) {
         }
     }
 
-    Screen("Folders") {
+    Screen("Settings") {
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
             Text(
                 destinations.root?.let { "Root: ${it.lastPathSegment}" }
@@ -70,11 +70,17 @@ fun FoldersScreen(destinations: Destinations, queue: DownloadQueue) {
                 else MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(8.dp))
-            Button(
-                onClick = { picker.launch(null) },
-                modifier = Modifier.initialFocus(editing == null),
-            ) {
-                Text(if (destinations.root == null) "Choose folder" else "Change folder")
+            Row {
+                Button(
+                    onClick = { picker.launch(null) },
+                    modifier = Modifier.initialFocus(editing == null),
+                ) {
+                    Text(if (destinations.root == null) "Choose folder" else "Change folder")
+                }
+                onDev?.let {
+                    Spacer(Modifier.width(8.dp))
+                    TextButton(onClick = it) { Text("Developer tools") }
+                }
             }
         }
         Spacer(Modifier.height(12.dp))

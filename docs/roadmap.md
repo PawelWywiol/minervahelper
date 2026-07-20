@@ -128,9 +128,11 @@ Added 2026-07-20 after the owner reviewed the working app: it works, but it look
 behaves like a prototype. Full audit and rationale in [design.md](design.md).
 Four packages, in order — structure before paint:
 
-- [ ] **Structure:** top bar with a back button on every screen; persistent bottom
+- [x] **Structure:** top bar with a back button on every screen; persistent bottom
       menu (Browse · Search · Favourites · Queue · Settings); Dev screen hidden in
-      release; use the landscape screen instead of one left-pinned column
+      release; use the landscape screen instead of one left-pinned column —
+      done and tested on the device 2026-07-20; game lists now show a list +
+      details side by side
 - [ ] **Behaviour:** downloads start automatically on queueing (R36); finished items
       leave the queue and browse lists mark what is downloaded (R37); files already
       in the destination count as downloaded (R38); folder change offers to move

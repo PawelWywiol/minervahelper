@@ -4,6 +4,16 @@ import android.net.Uri
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -14,11 +24,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.pawelwywiol.minervahelper.BuildConfig
 import com.pawelwywiol.minervahelper.data.catalog.CatalogReader
 import com.pawelwywiol.minervahelper.data.catalog.Favourites
 import com.pawelwywiol.minervahelper.data.placement.Destinations
@@ -27,7 +40,6 @@ import com.pawelwywiol.minervahelper.data.queue.DownloadQueue
 import com.pawelwywiol.minervahelper.ui.catalog.CollectionsScreen
 import com.pawelwywiol.minervahelper.ui.catalog.FavouritesScreen
 import com.pawelwywiol.minervahelper.ui.catalog.PlatformsScreen
-import com.pawelwywiol.minervahelper.ui.catalog.RomDetailScreen
 import com.pawelwywiol.minervahelper.ui.catalog.RomsScreen
 import com.pawelwywiol.minervahelper.ui.catalog.SearchScreen
 import com.pawelwywiol.minervahelper.ui.onboarding.OnboardingScreen
@@ -36,6 +48,18 @@ import com.pawelwywiol.minervahelper.ui.settings.FoldersScreen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
+
+private data class Tab(val route: String, val label: String, val icon: ImageVector)
+
+private val TABS = listOf(
+    Tab("collections", "Browse", Icons.Filled.Home),
+    Tab("search", "Search", Icons.Filled.Search),
+    Tab("favourites", "Favourites", Icons.Filled.Favorite),
+    Tab("queue", "Queue", Icons.AutoMirrored.Filled.List),
+    Tab("folders", "Settings", Icons.Filled.Settings),
+)
+
+private val BROWSE_ROUTES = setOf("collections", "platforms/{collection}", "roms/{platformId}/{title}")
 
 @Composable
 fun MinervaNavHost() {
@@ -47,79 +71,102 @@ fun MinervaNavHost() {
     val destinations = remember { Destinations.get(context) }
     val setup = remember { Setup.get(context) }
 
-    NavHost(navController, startDestination = "collections") {
-        composable("dev") { SpikeScreen() }
-        composable("onboarding") {
-            OnboardingScreen(
-                setup = setup,
-                destinations = destinations,
-                catalogReady = catalog is CatalogState.Ready,
-                onCatalogImported = reloadCatalog,
-                onFinished = {
-                    navController.navigate("collections") {
-                        popUpTo("onboarding") { inclusive = true }
-                    }
-                },
-            )
-        }
-        composable("collections") {
-            // Setup is incomplete in more ways than a missing catalogue: an app that browses fine
-            // but has nowhere to save is a dead end discovered only at the download button.
-            val ready = setup.accepted && destinations.root != null
-            if (!ready) {
-                Message("Setting up…")
-                LaunchedEffect(Unit) {
-                    navController.navigate("onboarding") {
-                        popUpTo("collections") { inclusive = true }
+    val entry by navController.currentBackStackEntryAsState()
+    val route = entry?.destination?.route
+
+    Scaffold(
+        bottomBar = {
+            if (route != null && route != "onboarding") {
+                NavigationBar {
+                    TABS.forEach { tab ->
+                        NavigationBarItem(
+                            selected = if (tab.route == "collections") route in BROWSE_ROUTES
+                            else route == tab.route,
+                            onClick = {
+                                navController.navigate(tab.route) {
+                                    popUpTo("collections") { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            },
+                            icon = { Icon(tab.icon, contentDescription = tab.label) },
+                            label = { Text(tab.label) },
+                        )
                     }
                 }
-                return@composable
             }
-            WithCatalog(catalog, navController::navigate) { catalog ->
-                CollectionsScreen(
-                    reader = catalog,
-                    onOpen = { navController.navigate("platforms/${Uri.encode(it)}") },
-                    onSearch = { navController.navigate("search") },
-                    onFavourites = { navController.navigate("favourites") },
-                    onQueue = { navController.navigate("queue") },
-                    onFolders = { navController.navigate("folders") },
-                    onDeveloper = { navController.navigate("dev") },
+        },
+    ) { padding ->
+        NavHost(
+            navController,
+            startDestination = "collections",
+            modifier = Modifier.padding(padding),
+        ) {
+            composable("dev") { SpikeScreen() }
+            composable("onboarding") {
+                OnboardingScreen(
+                    setup = setup,
+                    destinations = destinations,
+                    catalogReady = catalog is CatalogState.Ready,
+                    onCatalogImported = reloadCatalog,
+                    onFinished = {
+                        navController.navigate("collections") {
+                            popUpTo("onboarding") { inclusive = true }
+                        }
+                    },
                 )
             }
-        }
-        composable("platforms/{collection}") { entry ->
-            val collection = Uri.decode(entry.arguments?.getString("collection").orEmpty())
-            WithCatalog(catalog, navController::navigate) { catalog ->
-                PlatformsScreen(catalog, collection) {
-                    navController.navigate("roms/${it.id}/${Uri.encode(it.key)}")
+            composable("collections") {
+                // Setup is incomplete in more ways than a missing catalogue: an app that browses fine
+                // but has nowhere to save is a dead end discovered only at the download button.
+                val ready = setup.accepted && destinations.root != null
+                if (!ready) {
+                    Message("Setting up…")
+                    LaunchedEffect(Unit) {
+                        navController.navigate("onboarding") {
+                            popUpTo("collections") { inclusive = true }
+                        }
+                    }
+                    return@composable
+                }
+                WithCatalog(catalog, navController::navigate) { catalog ->
+                    CollectionsScreen(catalog) { navController.navigate("platforms/${Uri.encode(it)}") }
                 }
             }
-        }
-        composable("roms/{platformId}/{title}") { entry ->
-            val platformId = entry.arguments?.getString("platformId")?.toLongOrNull() ?: 0L
-            val title = Uri.decode(entry.arguments?.getString("title").orEmpty())
-            WithCatalog(catalog, navController::navigate) { catalog ->
-                RomsScreen(catalog, platformId, title) { navController.navigate("rom/${it.id}") }
+            composable("platforms/{collection}") { entry ->
+                val collection = Uri.decode(entry.arguments?.getString("collection").orEmpty())
+                WithCatalog(catalog, navController::navigate) { catalog ->
+                    PlatformsScreen(catalog, collection) {
+                        navController.navigate("roms/${it.id}/${Uri.encode(it.key)}")
+                    }
+                }
             }
-        }
-        composable("search") {
-            WithCatalog(catalog, navController::navigate) { catalog ->
-                SearchScreen(catalog) { navController.navigate("rom/${it.id}") }
+            composable("roms/{platformId}/{title}") { entry ->
+                val platformId = entry.arguments?.getString("platformId")?.toLongOrNull() ?: 0L
+                val title = Uri.decode(entry.arguments?.getString("title").orEmpty())
+                WithCatalog(catalog, navController::navigate) { catalog ->
+                    RomsScreen(catalog, favourites, queue, platformId, title)
+                }
             }
-        }
-        composable("queue") {
-            QueueScreen(queue, destinations) { navController.navigate("folders") }
-        }
-        composable("folders") { FoldersScreen(destinations, queue) }
-        composable("favourites") {
-            WithCatalog(catalog, navController::navigate) { reader ->
-                FavouritesScreen(reader, favourites) { navController.navigate("rom/${it.id}") }
+            composable("search") {
+                WithCatalog(catalog, navController::navigate) { catalog ->
+                    SearchScreen(catalog, favourites, queue)
+                }
             }
-        }
-        composable("rom/{romId}") { entry ->
-            val romId = entry.arguments?.getString("romId")?.toLongOrNull() ?: 0L
-            WithCatalog(catalog, navController::navigate) { reader ->
-                RomDetailScreen(reader, favourites, queue, romId)
+            composable("queue") {
+                QueueScreen(queue, destinations) { navController.navigate("folders") }
+            }
+            composable("folders") {
+                FoldersScreen(
+                    destinations,
+                    queue,
+                    onDev = if (BuildConfig.DEBUG) ({ navController.navigate("dev") }) else null,
+                )
+            }
+            composable("favourites") {
+                WithCatalog(catalog, navController::navigate) { reader ->
+                    FavouritesScreen(reader, favourites, queue)
+                }
             }
         }
     }

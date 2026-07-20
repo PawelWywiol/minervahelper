@@ -7,6 +7,32 @@ unresolved. Claims without measurements do not belong here.
 
 ---
 
+## 2026-07-20 — M7 structure: the app now has real navigation
+
+The first M7 package (structure) is done and tested on the connected device:
+
+- **A persistent bottom menu** — Browse · Search · Favourites · Queue · Settings —
+  on every screen, with icons. Switching tabs keeps each tab's place: leaving the
+  FinalBurn Neo platform list for the Queue and coming back lands exactly where
+  the user left off (verified on the device).
+- **A back arrow with the screen title** on every sub-screen (collection,
+  platform, game list).
+- **The landscape screen is finally used:** game lists (browse, search,
+  favourites) show the list on the left and the selected game's details on the
+  right — no more navigating away just to read a size or add to the queue. The
+  selected row stays highlighted.
+- **The Dev screen is gone from the main UI.** It is now a "Developer tools"
+  entry on the Settings screen, present only in debug builds — release users
+  will never see it.
+
+**Measured on the device (RG477V):** all five tabs switch correctly by touch;
+back arrows return to the right screen; search-by-typing works with results and
+details side by side; D-pad focus stays visible while scrolling and reaches the
+bottom menu. One fix along the way: the Material icons artifact is no longer in
+the Compose BOM (it froze at 1.7.x), so its version must be pinned explicitly.
+
+Remaining M7 packages: behaviour (automatic queue), identity (colours), guidance.
+
 ## 2026-07-20 — The owner reviewed the app: it works, but it feels like a prototype
 
 The owner used the working app and set new guidelines: no way back between screens,

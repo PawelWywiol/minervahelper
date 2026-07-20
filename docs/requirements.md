@@ -83,7 +83,7 @@ a downloaded ROM as a program anyway. The limitation is spelled out in
 | R37 | Finished downloads leave the queue; browse lists mark what is downloaded | ⬜ | M7 |
 | R38 | A file already in the destination (same name and size) counts as downloaded | ⬜ | M7 |
 | R39 | Changing a folder asks whether to move already-downloaded files | ⬜ | M7 |
-| R40 | **Finished-product look: navigation, visual identity, affordances, guidance** | ⬜ | M7 |
+| R40 | **Finished-product look: navigation, visual identity, affordances, guidance** | 🔨 | M7 |
 
 **R36–R40 — added 2026-07-20** after the owner reviewed the working app. The full
 audit and the plan behind them: [design.md](design.md). R40 in one sentence: the user
