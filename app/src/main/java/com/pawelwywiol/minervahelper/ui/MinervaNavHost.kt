@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -21,6 +22,7 @@ import androidx.navigation.compose.rememberNavController
 import com.pawelwywiol.minervahelper.data.catalog.CatalogReader
 import com.pawelwywiol.minervahelper.data.catalog.Favourites
 import com.pawelwywiol.minervahelper.data.placement.Destinations
+import com.pawelwywiol.minervahelper.data.settings.Setup
 import com.pawelwywiol.minervahelper.data.queue.DownloadQueue
 import com.pawelwywiol.minervahelper.ui.catalog.CollectionsScreen
 import com.pawelwywiol.minervahelper.ui.catalog.FavouritesScreen
@@ -28,6 +30,7 @@ import com.pawelwywiol.minervahelper.ui.catalog.PlatformsScreen
 import com.pawelwywiol.minervahelper.ui.catalog.RomDetailScreen
 import com.pawelwywiol.minervahelper.ui.catalog.RomsScreen
 import com.pawelwywiol.minervahelper.ui.catalog.SearchScreen
+import com.pawelwywiol.minervahelper.ui.onboarding.OnboardingScreen
 import com.pawelwywiol.minervahelper.ui.queue.QueueScreen
 import com.pawelwywiol.minervahelper.ui.settings.FoldersScreen
 import kotlinx.coroutines.Dispatchers
@@ -37,15 +40,41 @@ import java.io.File
 @Composable
 fun MinervaNavHost() {
     val navController = rememberNavController()
-    val catalog = rememberCatalog()
+    val (catalog, reloadCatalog) = rememberCatalog()
     val context = LocalContext.current
     val favourites = remember { Favourites(context) }
     val queue = remember { DownloadQueue.get(context) }
     val destinations = remember { Destinations.get(context) }
+    val setup = remember { Setup.get(context) }
 
     NavHost(navController, startDestination = "collections") {
         composable("dev") { SpikeScreen() }
+        composable("onboarding") {
+            OnboardingScreen(
+                setup = setup,
+                destinations = destinations,
+                catalogReady = catalog is CatalogState.Ready,
+                onCatalogImported = reloadCatalog,
+                onFinished = {
+                    navController.navigate("collections") {
+                        popUpTo("onboarding") { inclusive = true }
+                    }
+                },
+            )
+        }
         composable("collections") {
+            // Setup is incomplete in more ways than a missing catalogue: an app that browses fine
+            // but has nowhere to save is a dead end discovered only at the download button.
+            val ready = setup.accepted && destinations.root != null
+            if (!ready) {
+                Message("Setting up…")
+                LaunchedEffect(Unit) {
+                    navController.navigate("onboarding") {
+                        popUpTo("collections") { inclusive = true }
+                    }
+                }
+                return@composable
+            }
             WithCatalog(catalog, navController::navigate) { catalog ->
                 CollectionsScreen(
                     reader = catalog,
@@ -116,8 +145,8 @@ private fun WithCatalog(
     is CatalogState.Ready -> content(state.reader)
     CatalogState.Loading -> Message("Opening the catalogue…")
     CatalogState.Missing -> {
-        Message("No catalogue yet. Import it from the Developer screen.")
-        LaunchedEffect(Unit) { navigate("dev") }
+        Message("Setting up…")
+        LaunchedEffect(Unit) { navigate("onboarding") }
     }
 }
 
@@ -127,11 +156,13 @@ private fun Message(text: String) {
 }
 
 @Composable
-private fun rememberCatalog(): CatalogState {
+private fun rememberCatalog(): Pair<CatalogState, () -> Unit> {
     val context = LocalContext.current
     var state by remember { mutableStateOf<CatalogState>(CatalogState.Loading) }
+    var attempt by remember { mutableIntStateOf(0) }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(attempt) {
+        (state as? CatalogState.Ready)?.reader?.close()
         state = withContext(Dispatchers.IO) {
             runCatching {
                 val opened = CatalogReader(File(context.filesDir, "catalog.db"))
@@ -140,5 +171,5 @@ private fun rememberCatalog(): CatalogState {
         }
     }
     DisposableEffect(Unit) { onDispose { (state as? CatalogState.Ready)?.reader?.close() } }
-    return state
+    return state to { attempt++ }
 }

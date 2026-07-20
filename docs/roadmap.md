@@ -14,7 +14,7 @@ Last updated: 2026-07-20
 | **M2** | Interface: browsing, search, details, favourites | 🔨 in progress |
 | **M3** | Download queue and engine | 🔨 in progress |
 | **M4** | File placement, verification, platform mapping | 🟡 |
-| **M5** | Onboarding, settings, battery | ⬜ |
+| **M5** | Onboarding, settings, battery | 🟡 |
 | **M6** | Hardening and release | ⬜ |
 
 ---
@@ -97,11 +97,12 @@ is downloading, how fast, and whether it will fit.
 **Done when:** a downloaded ROM lands in the right folder and launches in an
 emulator frontend; a corrupted file is rejected with a retry offered.
 
-## ⬜ M5 — Onboarding, settings, battery
+## 🟡 M5 — Onboarding, settings, battery
 
-- [ ] First-run flow
-- [ ] Disclaimer of responsibility (R30)
-- [ ] Data limits and Wi-Fi enforcement
+- [x] First-run flow — disclaimer, folder, catalogue, in that order
+- [x] Disclaimer of responsibility (R30)
+- [x] Wi-Fi enforcement (unmetered-only, done in M1)
+- [ ] Data limit (R28) — confirm it is still needed; unmetered-only may cover it
 - [ ] Battery audit
 
 **Done when:** a fresh install leads to playing a downloaded game in one sitting,

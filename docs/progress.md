@@ -7,6 +7,44 @@ unresolved. Claims without measurements do not belong here.
 
 ---
 
+## 2026-07-20 — A fresh install now explains itself
+
+Until now the app assumed you already knew three things: that a disclaimer existed
+somewhere, that the catalogue had to be imported from a screen labelled "Dev", and
+that a destination folder had to be chosen before anything could be saved. None of
+them were signposted, and each one silently blocked everything after it.
+
+They are now one numbered sequence, shown automatically whenever setup is incomplete.
+
+**Step 1 — what this app does, and what it does not answer for (R30).** Plain
+language: the app finds files in a public archive and downloads what you pick; it
+never sends your files to anyone else; what you download and whether you may have it
+is your decision, the author hosts nothing and takes no responsibility. It has to be
+acknowledged once, and the answer is remembered.
+
+**Step 2 — where ROMs should go.** Explains that only that one folder is accessed,
+and that a subfolder per console is created inside it.
+
+**Step 3 — getting the list of games.** Says plainly that it is about 1.6 GB, needs
+Wi-Fi, takes a while, and can be left running. Progress is shown as "Downloading the
+index — n%" then "Building the list — n%". A failure offers "Try again" instead of a
+dead end. When it finishes, the app reopens the catalogue by itself — before, a
+freshly imported catalogue stayed invisible until the app was restarted.
+
+**Tested on the device.** Setup was reset and the flow walked through: step 1 →
+step 2 → folder granted → straight to the collection list, because the catalogue was
+already there. Step 3 was then checked by temporarily hiding the catalogue file and
+restoring it afterwards — deliberately, rather than deleting a 521 MB catalogue that
+takes hours to rebuild. The screen appeared correctly and the catalogue came back
+intact.
+
+**Still open in M5:** the battery audit (R29), and a data-usage limit (R28). On R28 it
+is worth saying that large transfers are already restricted to unmetered networks, so
+a mobile plan cannot be hit by accident — a separate megabyte cap may be solving a
+problem the app no longer has. Worth confirming before building it.
+
+---
+
 ## 2026-07-20 — Downloaded ROMs now land in a real folder
 
 Until now a finished download stayed inside the app's private storage, where no

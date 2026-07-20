@@ -77,7 +77,7 @@ a downloaded ROM as a program anyway. The limitation is spelled out in
 | R22 | Intuitive interface, legible on a small screen | ⬜ | M2 |
 | R23 | **Full D-pad / gamepad operation, no touch required** | ⬜ | M2 |
 | R24 | Clear download progress and notifications | 🔨 | M3 |
-| R25 | First-run onboarding | ⬜ | M5 |
+| R25 | First-run onboarding | ✅ | M5 |
 | R35 | **Live statistics while queueing and downloading** | ⬜ | M3 |
 
 **R23 — warning:** stage M0 revealed that a focused button **does not respond** to
@@ -106,7 +106,7 @@ doing, or find out too late that it will not fit. At minimum:
 | ID | Requirement | Status | Stage |
 |---|---|---|---|
 | R32 | **Never share downloaded files, directly or indirectly** | ✅ | M0 |
-| R30 | Disclaimer: the author is not responsible for what the user downloads | ⬜ | M5 |
+| R30 | Disclaimer: the author is not responsible for what the user downloads | ✅ | M5 |
 
 **R32 is the hardest rule in the project.** The app is a download helper, never
 a distribution tool. Sharing must be structurally impossible — not merely disabled
