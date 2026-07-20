@@ -75,7 +75,8 @@ lists scroll without stutter.
 - [x] Verify each file against the archive's checksum before accepting it
 - [x] Prove the non-sharing rule: 0 bytes of file content sent, checked every run
 - [x] Survive app closure — killed mid-download, resumed by itself on reopening
-- [ ] Survive a device reboot (not yet tested — needs the handheld restarted)
+- [x] Survive a device reboot — tested 2026-07-20: a file queued with Wi-Fi off was
+      downloaded and placed after a reboot without the app being opened at all
 - [x] The large MAME torrent question is settled: the "Software List CHDs (merged)"
       swarm simply has no seeds (measured twice, 5 minutes each), while the even
       bigger "MAME - EXTRAs" torrent downloads fine — it is that swarm, not the engine

@@ -25,13 +25,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.pawelwywiol.minervahelper.data.placement.Destinations
+import com.pawelwywiol.minervahelper.data.placement.FileMover
 import com.pawelwywiol.minervahelper.data.placement.FilePlacement
 import com.pawelwywiol.minervahelper.data.queue.DownloadQueue
 import com.pawelwywiol.minervahelper.data.queue.DownloadedItem
@@ -40,7 +40,6 @@ import com.pawelwywiol.minervahelper.ui.FocusedList
 import com.pawelwywiol.minervahelper.ui.Screen
 import com.pawelwywiol.minervahelper.ui.initialFocus
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 private data class PlatformRow(val collection: String, val platformKey: String, val count: Int)
@@ -53,12 +52,10 @@ private val GRANT_FLAGS =
 @Composable
 fun FoldersScreen(destinations: Destinations, queue: DownloadQueue, onDev: (() -> Unit)? = null) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     val placement = remember { FilePlacement(context) }
     var editing by remember { mutableStateOf<PlatformRow?>(null) }
     var pendingRoot by remember { mutableStateOf<Uri?>(null) }
     var pendingFolderMove by remember { mutableStateOf<PendingFolderMove?>(null) }
-    var moveStatus by remember { mutableStateOf<String?>(null) }
 
     var platforms by remember { mutableStateOf<List<PlatformRow>>(emptyList()) }
     LaunchedEffect(queue.revision) {
@@ -86,48 +83,6 @@ fun FoldersScreen(destinations: Destinations, queue: DownloadQueue, onDev: (() -
         }
     }
 
-    fun moveAll(fromRoot: Uri, toRoot: Uri) {
-        scope.launch {
-            moveStatus = "Moving files…"
-            var moved = 0
-            var missing = 0
-            var failed = 0
-            withContext(Dispatchers.IO) {
-                queue.downloaded().forEach { item ->
-                    val folder = item.folder.ifBlank {
-                        destinations.folderFor(item.collection, item.platformKey)
-                    }
-                    runCatching { placement.move(fromRoot, folder, toRoot, folder, item.name) }
-                        .fold({ if (it) moved++ else missing++ }, { failed++ })
-                }
-            }
-            moveStatus = buildString {
-                append("Moved $moved files")
-                if (missing > 0) append(" · $missing not found")
-                if (failed > 0) append(" · $failed failed")
-            }
-        }
-    }
-
-    fun moveFolder(move: PendingFolderMove) {
-        val root = destinations.root ?: return
-        scope.launch {
-            moveStatus = "Moving files…"
-            var moved = 0
-            var failed = 0
-            withContext(Dispatchers.IO) {
-                move.items.forEach { item ->
-                    runCatching { placement.move(root, move.from, root, move.to, item.name) }
-                        .fold(
-                            { if (it) { moved++; queue.setDownloadedFolder(item.id, move.to) } },
-                            { failed++ },
-                        )
-                }
-            }
-            moveStatus = "Moved $moved files" + if (failed > 0) " · $failed failed" else ""
-        }
-    }
-
     Screen("Settings") {
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
             Text(
@@ -150,7 +105,7 @@ fun FoldersScreen(destinations: Destinations, queue: DownloadQueue, onDev: (() -
                     TextButton(onClick = it) { Text("Developer tools") }
                 }
             }
-            moveStatus?.let {
+            FileMover.status?.let {
                 Spacer(Modifier.height(4.dp))
                 Text(it, style = MaterialTheme.typography.bodySmall)
             }
@@ -224,7 +179,7 @@ fun FoldersScreen(destinations: Destinations, queue: DownloadQueue, onDev: (() -
             confirmButton = {
                 TextButton(onClick = {
                     destinations.rememberRoot(newRoot, GRANT_FLAGS)
-                    oldRoot?.let { moveAll(it, newRoot) }
+                    oldRoot?.let { FileMover.moveAll(placement, queue, destinations, it, newRoot) }
                     pendingRoot = null
                 }) { Text("Move files") }
             },
@@ -249,7 +204,9 @@ fun FoldersScreen(destinations: Destinations, queue: DownloadQueue, onDev: (() -
             },
             confirmButton = {
                 TextButton(onClick = {
-                    moveFolder(move)
+                    destinations.root?.let {
+                        FileMover.moveBetweenFolders(placement, queue, it, move.from, move.to, move.items)
+                    }
                     pendingFolderMove = null
                 }) { Text("Move files") }
             },

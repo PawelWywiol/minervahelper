@@ -40,6 +40,8 @@ import com.pawelwywiol.minervahelper.work.DownloadWorker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+private const val RECENT_DOWNLOADS = 20
+
 @Composable
 fun QueueScreen(queue: DownloadQueue, destinations: Destinations, onFolders: () -> Unit) {
     val context = LocalContext.current
@@ -153,7 +155,7 @@ fun QueueScreen(queue: DownloadQueue, destinations: Destinations, onFolders: () 
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     )
                 }
-                items(downloaded, key = { "downloaded-${it.id}" }) { done ->
+                items(downloaded.take(RECENT_DOWNLOADS), key = { "downloaded-${it.id}" }) { done ->
                     Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
                         Text(done.name, style = MaterialTheme.typography.bodyLarge)
                         Text(
@@ -161,6 +163,16 @@ fun QueueScreen(queue: DownloadQueue, destinations: Destinations, onFolders: () 
                                 (done.folder.takeIf { it.isNotBlank() }?.let { " · in $it" } ?: ""),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.tertiary,
+                        )
+                    }
+                }
+                if (downloaded.size > RECENT_DOWNLOADS) {
+                    item(key = "downloaded-more") {
+                        Text(
+                            "…and ${downloaded.size - RECENT_DOWNLOADS} more, all marked ✓ in the lists",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                         )
                     }
                 }

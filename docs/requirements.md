@@ -39,7 +39,7 @@ possible future feature, out of scope for now.
 | R10 | Group selected ROMs by torrent (one torrent = one job) | ✅ | M3 |
 | R11 | Background download queue with automatic start (R36) | ✅ | M3 |
 | R12 | Pause / resume / cancel at any time | 🔨 | M3 |
-| R13 | Resume after the app is closed and after a device reboot | 🔨 | M3 |
+| R13 | Resume after the app is closed and after a device reboot | ✅ | M3 |
 
 ## Storing files
 

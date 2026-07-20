@@ -7,6 +7,26 @@ unresolved. Claims without measurements do not belong here.
 
 ---
 
+## 2026-07-20 — Reboot survival proven, and the owner's review notes addressed
+
+**The queue survives a device reboot (R13 ✅).** Measured end to end: a file was
+queued with Wi-Fi off (so it had to wait), the handheld was rebooted, Wi-Fi came
+back — and the download ran, verified and placed the file **without the app being
+opened at all**. Android's WorkManager woke the worker in the background; payload
+uploaded 0 B as always. This was the last untested half of R13; resume after
+closing the app was proven earlier.
+
+**Owner's review of M7** (recorded 2026-07-20): the look is accepted for now; the
+FinalBurn Neo folder mapping question is postponed; the loose ends went as
+recommended:
+
+- Moving files after a folder change now runs in its own background scope
+  (`FileMover`) — leaving the settings screen no longer interrupts it.
+- The queue screen shows the 20 most recent downloads and says how many more there
+  are, instead of growing without bound.
+- The `ddrstraw*` test files were removed from the SD card and from the downloaded
+  record.
+
 ## 2026-07-20 — M7 identity and guidance: the app looks like a product now
 
 The last two M7 packages, both tested on the connected device.
