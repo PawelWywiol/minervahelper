@@ -2,12 +2,15 @@ package com.pawelwywiol.minervahelper.ui.queue
 
 import android.os.StatFs
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,11 +23,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.pawelwywiol.minervahelper.data.queue.DownloadQueue
+import com.pawelwywiol.minervahelper.data.queue.DownloadState
 import com.pawelwywiol.minervahelper.data.queue.QueueItem
 import com.pawelwywiol.minervahelper.ui.FocusableRow
 import com.pawelwywiol.minervahelper.ui.Screen
 import com.pawelwywiol.minervahelper.ui.formatSize
 import com.pawelwywiol.minervahelper.ui.initialFocus
+import com.pawelwywiol.minervahelper.work.DownloadWorker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -51,6 +56,17 @@ fun QueueScreen(queue: DownloadQueue) {
                 color = if (total > free) MaterialTheme.colorScheme.error
                 else MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            Spacer(Modifier.height(8.dp))
+            Row {
+                Button(
+                    enabled = items.any { it.state != DownloadState.DONE },
+                    onClick = { DownloadWorker.enqueue(context) },
+                ) {
+                    Text("Download")
+                }
+                Spacer(Modifier.width(8.dp))
+                Button(onClick = { DownloadWorker.cancel(context) }) { Text("Stop") }
+            }
         }
         Spacer(Modifier.height(8.dp))
 

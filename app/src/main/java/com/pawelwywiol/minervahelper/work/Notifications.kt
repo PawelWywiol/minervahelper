@@ -11,6 +11,7 @@ internal object Notifications {
 
     const val CHANNEL_SYNC = "catalog_sync"
     const val ID_SYNC = 1
+    const val ID_DOWNLOAD = 2
 
     fun ensureChannels(context: Context) {
         val channel = NotificationChannel(

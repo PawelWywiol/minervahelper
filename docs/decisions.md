@@ -230,3 +230,27 @@ confidently is worse than a slow one.
 **Cost:** finding a favourite again is a search by name rather than a direct jump, and
 if the archive ever renames a file, that favourite is lost rather than wrong. Losing it
 is the better failure: it is visible.
+
+---
+
+<a id="d14"></a>
+## D14 — Peer discovery stays on; sharing is blocked at the connection instead
+
+**Decision:** the app keeps using the peer-discovery network (DHT) to find who has the
+files, rather than switching it off for safety. Sharing is prevented by refusing all
+incoming connections, never permitting file content to be sent, and dropping the
+torrent the moment the wanted files are complete.
+
+**Why:** switching discovery off was tried first. Measured on the device, the archive's
+torrents then find **zero** peers — the 58 public tracker addresses inside them no
+longer answer, so discovery is the only route to a seed. An app that shares nothing but
+also downloads nothing is not a safer app; it is a broken one.
+
+**The distinction that makes this acceptable:** being findable is not sharing. Another
+user can learn this device is interested in a torrent, but cannot open a connection to
+it, and never receives file content. The app verifies this after every download and
+refuses the result if a single byte of file content went out.
+
+**Cost:** the device is visible to the swarm while downloading. If that ever becomes
+unacceptable, the alternative is to obtain files over plain HTTPS instead — which the
+archive does not currently offer.

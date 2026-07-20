@@ -38,7 +38,7 @@ fun MinervaNavHost() {
     val catalog = rememberCatalog()
     val context = LocalContext.current
     val favourites = remember { Favourites(context) }
-    val queue = remember { DownloadQueue(context) }
+    val queue = remember { DownloadQueue.get(context) }
 
     NavHost(navController, startDestination = "collections") {
         composable("dev") { SpikeScreen() }

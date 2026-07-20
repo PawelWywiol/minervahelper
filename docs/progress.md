@@ -7,6 +7,58 @@ unresolved. Claims without measurements do not belong here.
 
 ---
 
+## 2026-07-20 — The app downloads, and provably does not share
+
+The queue now actually downloads. Pressing "Download" works through it torrent by
+torrent, fetching only the selected files and checking each one against the checksum
+the archive published before marking it done.
+
+**Tested on the device, from an empty queue:** two ROMs from two different torrents.
+
+| What happened | Result |
+|---|---|
+| ROM from the TOSEC torrent (4,547 files, 3.18 GB) | downloaded in ~5 s at 391 kB/s |
+| Files written to disk | **exactly one** — the requested ROM (plus a small scratch file) |
+| Checksum | matches the archive, verified again independently after the test |
+| **File content shared with others** | **0 bytes** |
+| ROM from the MAME torrent | failed — no peers found, see below |
+
+### The hard rule is now measured, not promised
+
+The app must never share downloaded files. That is now enforced by four things at
+once: incoming connections are refused so nobody can reach the device; the engine is
+never allowed to send file content even on connections it opened itself; the torrent
+is dropped the instant the wanted files are complete, so it never becomes a source;
+and the app **checks the number of bytes of file content it sent and refuses to
+accept the download if it is anything other than zero**.
+
+That check caught a real mistake of mine. My first version counted *all* bytes sent,
+which includes the small messages any client must send to ask for data — 3.8 kB on a
+75 kB download. It reported the rule as broken when nothing had been shared. Measuring
+the wrong thing would have made the guarantee useless: it would have failed constantly
+and been switched off. It now counts file content only, which is what the rule is about.
+
+### A finding that changed the design
+
+Peer discovery had to stay on. Switching off the peer-discovery network seemed the
+safer default, but measured on the device it means **zero peers, forever** — the
+public tracker addresses listed in these torrents (58 of them) are dead, so it is the
+only way to find anyone who has the files. Being discoverable is not the same as
+sharing: nobody can connect to the device, and the engine never sends file content.
+See [decision D14](decisions.md#d14).
+
+### Unresolved
+
+One of the two torrents — the large MAME one — found no peers in five minutes and was
+given up on, correctly, without blocking the rest of the queue. Whether that swarm is
+simply dead or something about very large torrents is at fault is **not established**.
+It needs checking against a third torrent before any conclusion is drawn.
+
+Live progress in the queue screen is also still missing: the screen shows states, but
+speed and percentage only appear in the notification.
+
+---
+
 ## 2026-07-20 — M3 started: a download queue you can fill up
 
 ROMs can now be added to a download queue from their detail screen, and the queue

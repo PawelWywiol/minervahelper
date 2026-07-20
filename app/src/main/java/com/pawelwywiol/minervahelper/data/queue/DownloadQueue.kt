@@ -114,6 +114,20 @@ class DownloadQueue(context: Context) {
             }
         }
 
+    companion object {
+        /**
+         * The UI and the download worker must see the same queue — two instances would each keep
+         * their own change counter and the screen would silently stop reflecting the download.
+         */
+        @Volatile
+        private var instance: DownloadQueue? = null
+
+        fun get(context: Context): DownloadQueue =
+            instance ?: synchronized(this) {
+                instance ?: DownloadQueue(context.applicationContext).also { instance = it }
+            }
+    }
+
     private fun CatalogReader.Rom.toValues() = ContentValues().apply {
         put("name", name)
         put("size", size)

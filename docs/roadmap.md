@@ -70,8 +70,11 @@ lists scroll without stutter.
 
 - [x] Selection basket for multiple ROMs — the queue *is* the basket
 - [x] Group selections by torrent
-- [ ] Download worker with pause / resume / cancel
+- [x] Download worker (start / cancel; pause-resume still to do)
+- [x] Verify each file against the archive's checksum before accepting it
+- [x] Prove the non-sharing rule: 0 bytes of file content sent, checked every run
 - [ ] Survive app closure and device reboot
+- [ ] Find out why the large MAME torrent found no peers in 5 minutes
 - [ ] Ship a tracker list (R33)
 - [ ] Transfer limits
 - [ ] Live statistics: speed, progress, queue size, free space (R35) — queue size
