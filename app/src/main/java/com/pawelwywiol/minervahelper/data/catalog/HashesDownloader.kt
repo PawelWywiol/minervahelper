@@ -72,6 +72,13 @@ class HashesDownloader(private val http: OkHttpClient) {
         target
     }
 
+    /**
+     * Identifies the upstream file well enough to notice it changed. The ETag alone would do when
+     * the server sends one; length is included so a server that drops ETags still gives us
+     * something to compare.
+     */
+    fun version(): String = head().let { "${it.etag.orEmpty()}:${it.length}" }
+
     private data class Remote(val length: Long, val etag: String?)
 
     private fun head(): Remote {

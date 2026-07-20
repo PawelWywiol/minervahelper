@@ -131,7 +131,7 @@ Not in the original brief; they emerged from reality or from later clarification
 | ID | Requirement | Reason |
 |---|---|---|
 | R33 | The app must ship its own torrent tracker list | Magnet links in the archive contain none — downloads would never start |
-| R34 | Re-import the catalogue when the archive is updated | The archive changes; new versions must be detected |
+| R34 | Re-import the catalogue when the archive is updated | The archive changes; new versions must be detected — implemented 2026-07-20 |
 | R18 | Fallback folder for unmapped platforms | See above |
 | R35 | Live download / queue / storage statistics | Added 2026-07-20 |
 

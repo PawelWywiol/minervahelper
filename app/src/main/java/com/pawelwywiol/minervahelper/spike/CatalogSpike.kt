@@ -21,7 +21,7 @@ object CatalogSpike {
 
         val started = System.currentTimeMillis()
         var lastLog = 0L
-        CatalogImporter().import(source, target) { p ->
+        CatalogImporter().import(source, target, sourceVersion = null) { p ->
             val now = System.currentTimeMillis()
             if (now - lastLog > 5_000) {
                 lastLog = now

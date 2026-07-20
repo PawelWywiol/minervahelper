@@ -7,6 +7,47 @@ unresolved. Claims without measurements do not belong here.
 
 ---
 
+## 2026-07-20 — The app can now tell when its list of games is out of date
+
+The catalogue was imported once and never looked at again. The archive keeps changing,
+so the list would quietly drift out of date with no way for the user to notice or fix
+it short of clearing the app's data. That is R34.
+
+**What was added.** The catalogue now records which upstream file it was built from.
+Opening the collection list makes one small request asking the archive whether that
+file has changed. If it has, a line appears: *"The archive has published a newer list
+of games."* with an "Update the list" button that rebuilds it.
+
+**A catalogue built before this change says nothing.** It has no recorded version, so
+there is nothing to compare — and nagging about an update that cannot be confirmed is
+worse than staying quiet.
+
+**Tested on the device, all three cases:**
+
+| catalogue's recorded version | result |
+|---|---|
+| none (built before this change) | no message — correct |
+| different from the archive's | message appears — correct |
+| same as the archive's | no message — correct |
+
+The check itself is a single request made when that screen opens, not at startup, so a
+slow or missing network never delays anything the user is waiting for.
+
+**Not tested:** pressing "Update the list" and letting it run. That deletes the
+catalogue and re-downloads 1.6 GB, and the device already holds a working one. The
+rebuild reuses the same import path used at first run, which is tested — but the
+forced-rebuild button itself has not been pressed on real hardware, and that should be
+said plainly rather than assumed.
+
+**A hidden defect was found and fixed along the way.** `CatalogImporter.kt` contained a
+raw zero byte inside a text value — invisible in any editor, and enough to make standard
+tools treat the whole source file as binary and skip it when searching. It worked, but
+it hid the file from tooling and cost time during this task. Replaced with the written-out
+escape, which behaves identically and can be seen. The same mistake had already been
+fixed once in another file; this was the second instance.
+
+---
+
 ## 2026-07-20 — The shrunk release build works, torrent engine included
 
 Release builds strip out code that looks unused. The torrent engine is reached through

@@ -116,7 +116,7 @@ entirely on the device.
 - [x] Network loss during download — tested; it pauses and resumes by itself
 - [x] Release build with code shrinking — tested on device, torrent path intact
 - [ ] Real signing key (owner's to create)
-- [ ] Versioned catalogue re-import (R34)
+- [x] Versioned catalogue re-import (R34) — detection tested; the rebuild button itself not yet pressed
 
 ---
 

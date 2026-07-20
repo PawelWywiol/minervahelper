@@ -34,6 +34,9 @@ class CatalogReader(file: File) : Closeable {
         meta("import_stage") == "done" && meta("schema_version") == CatalogSchema.VERSION.toString()
     }.getOrDefault(false)
 
+    /** Which upstream index this catalog was built from; null for catalogs built before R34. */
+    fun sourceVersion(): String? = runCatching { meta("source_version") }.getOrNull()
+
     private fun meta(key: String): String? =
         db.rawQuery("SELECT value FROM meta WHERE key = ?", arrayOf(key))
             .use { if (it.moveToFirst()) it.getString(0) else null }

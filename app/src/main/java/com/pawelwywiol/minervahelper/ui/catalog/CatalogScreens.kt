@@ -32,7 +32,11 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 import com.pawelwywiol.minervahelper.data.catalog.CatalogReader
+import com.pawelwywiol.minervahelper.data.catalog.CatalogSync
+import com.pawelwywiol.minervahelper.work.CatalogSyncWorker
+import okhttp3.OkHttpClient
 import com.pawelwywiol.minervahelper.data.catalog.Favourites
 import com.pawelwywiol.minervahelper.data.queue.DownloadQueue
 import com.pawelwywiol.minervahelper.ui.FocusableRow
@@ -58,8 +62,18 @@ fun CollectionsScreen(
     onFolders: () -> Unit,
     onDeveloper: () -> Unit,
 ) {
+    val context = LocalContext.current
     var collections by remember { mutableStateOf<List<CatalogReader.Collection>>(emptyList()) }
     LaunchedEffect(reader) { collections = withContext(Dispatchers.IO) { reader.collections() } }
+
+    // One HEAD request per visit to this screen. Checked here rather than at startup so a slow or
+    // absent network delays nothing the user is waiting for.
+    var updateAvailable by remember { mutableStateOf(false) }
+    LaunchedEffect(reader) {
+        updateAvailable = runCatching {
+            CatalogSync(context, OkHttpClient()).hasUpdate()
+        }.getOrDefault(false)
+    }
 
     Screen("Collections") {
         Row(modifier = Modifier.padding(horizontal = 16.dp)) {
@@ -72,6 +86,21 @@ fun CollectionsScreen(
             Button(onClick = onFolders) { Text("Folders") }
             Spacer(Modifier.width(8.dp))
             Button(onClick = onDeveloper) { Text("Dev") }
+        }
+        if (updateAvailable) {
+            Spacer(Modifier.height(8.dp))
+            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                Text(
+                    "The archive has published a newer list of games.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                Button(onClick = {
+                    CatalogSyncWorker.enqueue(context, force = true)
+                    updateAvailable = false
+                }) {
+                    Text("Update the list")
+                }
+            }
         }
         Spacer(Modifier.height(8.dp))
         FocusedList(collections) { collection, focus ->

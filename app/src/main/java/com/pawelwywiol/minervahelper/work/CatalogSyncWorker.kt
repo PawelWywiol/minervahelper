@@ -30,8 +30,9 @@ class CatalogSyncWorker(
     override suspend fun doWork(): Result {
         Notifications.ensureChannels(applicationContext)
         val sync = CatalogSync(applicationContext, OkHttpClient())
+        val force = inputData.getBoolean(KEY_FORCE, false)
         return try {
-            sync.run { stage -> report(stage) }
+            sync.run(force) { stage -> report(stage) }
             Result.success()
         } catch (cancelled: CancellationException) {
             throw cancelled
@@ -72,13 +73,15 @@ class CatalogSyncWorker(
         const val NAME = "catalog-sync"
         const val KEY_STAGE = "stage"
         const val KEY_PERCENT = "percent"
+        const val KEY_FORCE = "force"
         private const val MAX_ATTEMPTS = 5
         private const val DOWNLOADING = "downloading"
         private const val IMPORTING = "importing"
         private const val READY = "ready"
 
-        fun enqueue(context: Context) {
+        fun enqueue(context: Context, force: Boolean = false) {
             val request = OneTimeWorkRequestBuilder<CatalogSyncWorker>()
+                .setInputData(workDataOf(KEY_FORCE to force))
                 .setConstraints(
                     Constraints.Builder()
                         .setRequiredNetworkType(NetworkType.UNMETERED)
@@ -86,8 +89,11 @@ class CatalogSyncWorker(
                         .build()
                 )
                 .build()
-            WorkManager.getInstance(context)
-                .enqueueUniqueWork(NAME, ExistingWorkPolicy.KEEP, request)
+            WorkManager.getInstance(context).enqueueUniqueWork(
+                NAME,
+                if (force) ExistingWorkPolicy.REPLACE else ExistingWorkPolicy.KEEP,
+                request,
+            )
         }
     }
 }
