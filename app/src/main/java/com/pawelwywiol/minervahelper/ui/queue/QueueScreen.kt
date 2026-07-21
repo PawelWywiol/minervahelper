@@ -47,7 +47,7 @@ import com.pawelwywiol.minervahelper.data.queue.DownloadedItem
 import com.pawelwywiol.minervahelper.data.placement.Destinations
 import com.pawelwywiol.minervahelper.data.queue.QueueItem
 import com.pawelwywiol.minervahelper.ui.FocusableRow
-import com.pawelwywiol.minervahelper.ui.MediaIcon
+import com.pawelwywiol.minervahelper.ui.SystemIcon
 import com.pawelwywiol.minervahelper.ui.Screen
 import com.pawelwywiol.minervahelper.ui.formatSize
 import com.pawelwywiol.minervahelper.ui.initialFocus
@@ -220,11 +220,12 @@ fun QueueScreen(queue: DownloadQueue, destinations: Destinations, onFolders: () 
                     FocusableRow(
                         onClick = { confirmForget = done },
                         leading = {
-                            MediaIcon(
-                                systems.mediaFor(
+                            SystemIcon(
+                                systems.iconFor(
                                     done.collection,
                                     done.platformKey,
                                     destinations.slugFor(done.collection, done.platformKey),
+                                    done.name,
                                 )
                             )
                         },
@@ -363,7 +364,9 @@ private fun QueuedRow(
     FocusableRow(
         onClick = onRemove,
         modifier = modifier,
-        leading = { MediaIcon(systems.mediaFor(item.collection, item.platformKey, slug)) },
+        leading = {
+            SystemIcon(systems.iconFor(item.collection, item.platformKey, slug, item.name))
+        },
         trailing = {
             PauseButton(
                 paused = item.state == DownloadState.PAUSED,

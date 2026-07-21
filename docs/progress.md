@@ -7,6 +7,45 @@ unresolved. Claims without measurements do not belong here.
 
 ---
 
+## 2026-07-21 — Icons that name the system, and icons for everything else
+
+The first pass at row icons drew what the software came on — cartridge, disc, floppy,
+tape. The owner's verdict on the device was that they suggested nothing about the
+system and read as unintuitive, which is fair: a cartridge is a cartridge whether it
+is Nintendo's or Sega's.
+
+Redrawn on two axes instead of one. The **shape** is now the machine — gamepad, modern
+gamepad, joystick, handheld, arcade cabinet, computer — and the **colour** is the
+vendor: Nintendo red, PlayStation blue, Sega cyan, Atari orange, Commodore violet,
+Sinclair pink, NEC teal, SNK gold, Microsoft green, neutral slate for anything with no
+single maker behind it. Brand values were taken from published brand references, then
+two were moved on purpose: Sega's blue was too close to PlayStation's to tell apart in
+a mixed list, and Atari's red was a second red beside Nintendo's. Nintendo's and
+Microsoft's own values were kept but lightened, because at their published darkness
+they disappear into the app's background. Reasoning in [decisions.md](decisions.md#d22).
+
+**Files that are not games now have icons too**, which the previous set had no answer
+for beyond a generic "document". Images, video, audio, text and archives each get a
+shape, in one neutral grey, chosen from the file's extension — but only once the
+platform is unknown, or every `.zip` ROM in the archive would become a box.
+
+Checked on the device, six of the eleven families seen in real lists: Atari 2600 as an
+orange joystick, Virtual Boy as a red handheld, Commodore 64 and Amiga as violet
+computers, an arcade ROM as a slate cabinet, and a Laserdisc changelog `.zip` as a grey
+archive box — that last one confirming the extension fallback fires only where it
+should. A Mega Drive game inside FinalBurn Neo still shows Sega cyan and the label
+"Sega Mega Drive", so the platform-key-wins rule survived the schema change. The
+remaining five families (Sony, Microsoft, SNK, NEC, Sinclair) run through the same code
+path and were checked in a rendered contact sheet, not on the device.
+
+The icons were rendered and looked at before shipping, not assumed: the first arcade
+cabinet came out as a plain rounded box that read like a microwave, and was redrawn
+with a narrow marquee head and wide shoulders until it was actually recognisable.
+
+`systems.csv` gained a column and now carries `slug, display_name, shape, family`.
+
+---
+
 ## 2026-07-21 — M8: a queue the owner steers, and text you can read
 
 Five things the owner asked for after using the app on the device. All done and

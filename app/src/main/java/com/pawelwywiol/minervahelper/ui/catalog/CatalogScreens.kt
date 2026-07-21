@@ -59,7 +59,7 @@ import com.pawelwywiol.minervahelper.data.queue.DownloadQueue
 import com.pawelwywiol.minervahelper.work.DownloadWorker
 import com.pawelwywiol.minervahelper.ui.FocusableRow
 import com.pawelwywiol.minervahelper.ui.FocusedList
-import com.pawelwywiol.minervahelper.ui.MediaIcon
+import com.pawelwywiol.minervahelper.ui.SystemIcon
 import com.pawelwywiol.minervahelper.ui.Screen
 import com.pawelwywiol.minervahelper.ui.formatCount
 import com.pawelwywiol.minervahelper.ui.formatSize
@@ -470,7 +470,9 @@ private fun RomRow(
         onClick = onClick,
         selected = selected,
         modifier = modifier,
-        leading = { MediaIcon(systems.mediaFor(rom.collection, rom.platformKey, slug)) },
+        leading = {
+            SystemIcon(systems.iconFor(rom.collection, rom.platformKey, slug, rom.name))
+        },
     ) {
         Text(rom.name, style = MaterialTheme.typography.bodyLarge)
         RomSubtitle(

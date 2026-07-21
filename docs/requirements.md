@@ -94,7 +94,7 @@ a downloaded ROM as a program anyway. The limitation is spelled out in
 | R43 | The queue can be reordered; higher up is downloaded first | ✅ | M8 |
 | R44 | Pause and resume a single item without stopping the others | ✅ | M8 |
 | R45 | Browse steps one level up rather than jumping to the top | ✅ | M8 |
-| R46 | List rows show the system and an icon for it | ✅ | M8 |
+| R46 | List rows show the system, an icon for the machine and its maker's colour | ✅ | M8 |
 | R47 | **Adjustable text size** | ✅ | M8 |
 
 **R36–R40 — added 2026-07-20** after the owner reviewed the working app. The full

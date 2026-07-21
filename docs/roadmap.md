@@ -194,8 +194,11 @@ tested on the RG477V; measurements are in [progress.md](progress.md).
 - [x] A game queued while a run is going joins that run instead of waiting for a
       separate one — found in testing
 - [x] **Browse steps up one level** (R45) instead of jumping to the top
-- [x] **System name and a medium icon on every row** (R46) — nine drawn icons, no
-      manufacturer logos ([D22](decisions.md#d22))
+- [x] **System name and an icon on every row** (R46) — twelve drawn machine
+      silhouettes in eleven vendor colours, no manufacturer logos
+      ([D22](decisions.md#d22)). Non-game content is identified by file type instead.
+      Redrawn 2026-07-21 after the owner found the first, medium-based set
+      unintuitive: it said what the software came on, never which system it was for
 - [x] **Adjustable text size** (R47), −20% to +100%, one setting for the whole app
 
 **Done when:** the owner can say which game downloads first, stop one without

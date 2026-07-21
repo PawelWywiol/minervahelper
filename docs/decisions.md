@@ -384,29 +384,53 @@ decorated names often miss where No-Intro's clean names hit).
 ---
 
 <a id="d22"></a>
-## D22 — Drawn media icons, not console logos
+## D22 — Machine silhouettes in vendor colours, not console logos
 
-**Decision:** list rows carry one of nine icons we drew — cartridge, disc, floppy,
-tape, arcade cabinet, handheld, computer, document, unknown — chosen by what the
-software came on, not by who made the machine.
+**Decision:** a row's icon is two independent facts. The **shape** is what the machine
+is — gamepad, modern gamepad, joystick, handheld, arcade cabinet, computer — and the
+**colour** is who made it: Nintendo red, PlayStation blue, Sega cyan, Atari orange,
+Commodore violet, Sinclair pink, NEC teal, SNK gold, Microsoft green, and a neutral
+slate for everything with no single vendor behind it. Content that is not a game at
+all — scans, images, video, audio, archives — is identified by its **file type**
+instead, in one grey, and is recognised from the file's extension.
 
-**Why:** the obvious alternative was a set of console logos, and the obvious sources
-do not survive inspection. The two comprehensive collections on GitHub
-(`HVR88/Monochrome-Gaming-Logos`, `Jaffacakelover/emulator-icons-svg`) carry **no
-licence at all** and consist of manufacturer trademarks; the one MIT-licensed set
-(`scurker/gamicons`) is nineteen low-resolution images last touched in 2015. None of
-them comes close to covering this archive's 1,591 platforms, and a fifth of the
-archive — scans, manuals, loose disk images — has no console behind it to put a logo
-on. Nine shapes cover all of it, tint themselves with the theme, and add about five
-kilobytes.
+**Why the split:** neither axis alone identifies anything. Colour alone cannot tell a
+Game Boy from an NES; shape alone cannot tell a Mega Drive pad from a Famicom pad at
+24 dp. Together they do both, and a Sega arcade board can honestly read as "arcade
+cabinet, in Sega's colour" rather than being forced to pick one.
+
+**Why not logos:** the obvious sources do not survive inspection. The two
+comprehensive collections on GitHub (`HVR88/Monochrome-Gaming-Logos`,
+`Jaffacakelover/emulator-icons-svg`) carry **no licence at all** and consist of
+manufacturer trademarks; the one MIT-licensed set (`scurker/gamicons`) is nineteen
+low-resolution images last touched in 2015. None comes close to covering this
+archive's 1,591 platforms. A machine's outline plus the vendor's colour is
+recognisable without borrowing anyone's mark, and costs about five kilobytes.
+
+**Two colours deliberately are not the brand value.** Sega's #117BBD sits close enough
+to PlayStation blue to be confusable in a mixed list, so it moves to the cyan its
+Dreamcast era owns anyway; Atari's #D21404 is a second red beside Nintendo's, so it
+moves to the orange of the woodgrain 2600. Nintendo's #E60012 and Microsoft's #107C10
+are used, but lightened — at their published values they sink into the #14161A
+background. Fidelity to a swatch nobody sees side by side is worth less than telling
+the families apart.
+
+**Why roughly a dozen colours and not one per system:** past about a dozen, colour
+stops being information and becomes noise. The vendors a user actually recognises get
+their own; the long tail shares a neutral slate and is distinguished by shape. The
+row always spells the system out in text — colour is the second cue, never the only
+one.
 
 A trap found on the device: whole collections map to a single folder, so FinalBurn
 Neo's `megadrive` platform read "Arcade" on a screen titled "megadrive". The
 platform's own key now wins over the collection's slug for naming and icons, while
 placement still uses the slug — display and folder are deliberately allowed to differ.
+Verified again after this change: a Mega Drive game inside FinalBurn Neo shows Sega
+cyan, and still lands in `arcade`.
 
-**Cost:** two Mega Drive games and two SNES games look alike at a glance. The row
-text carries the system name, which is the part that actually identifies it.
+**Cost:** two Mega Drive games look alike at a glance, and a Mega Drive game sits
+beside a Master System game in the same cyan. The row text carries the exact system,
+which is the part that actually identifies it.
 
 ---
 
