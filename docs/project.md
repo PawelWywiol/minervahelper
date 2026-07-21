@@ -54,8 +54,6 @@ some users do not use them at all.
 5. **Never distribute** — the app helps a user fetch files for themselves and
    nothing else. It never shares what it downloads.
 
-The full, checkable list is in [requirements.md](requirements.md).
-
 ## What this project does not do
 
 - It is not a general torrent client — it serves the MiNERVA archive only.

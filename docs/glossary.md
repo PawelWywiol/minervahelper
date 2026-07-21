@@ -33,7 +33,7 @@ core of the whole project — it turns "download 300 GB" into "download 40 KB".
 ### Seeding
 
 Sharing files with other users after you have downloaded them. This app does not
-seed — see [decision D7](decisions.md#d7).
+seed — see [architecture.md](architecture.md).
 
 ### Tracker
 
@@ -43,8 +43,8 @@ Without a tracker, a download may never start.
 ### Magnet link
 
 A short link identifying a torrent without a `.torrent` file. In this archive the
-magnet links contain no tracker addresses, so the app has to supply its own —
-see requirement R33.
+magnet links contain no tracker addresses; the app relies on DHT instead, which
+found a live swarm in every test.
 
 ### Checksum (hash, MD5, SHA-1, CRC32)
 
@@ -84,15 +84,9 @@ the background. It exists so that no app can consume battery and data invisibly.
 ### D-pad
 
 The directional pad on a gamepad. On a handheld console it often replaces the
-touchscreen entirely, which is why the app must be fully operable with it —
-see requirement R23.
+touchscreen entirely, which is why the app must be fully operable with it.
 
 ### Handheld
 
 A portable games console. Here specifically an Android-based retro handheld, the
 Anbernic RG477V.
-
-### Milestone (M0, M1, M2…)
-
-A stage of the project with a defined scope and a test that decides whether it is
-finished. See the [roadmap](roadmap.md).

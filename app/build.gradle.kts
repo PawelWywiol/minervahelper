@@ -21,10 +21,9 @@ android {
         applicationId = "io.github.pawelwywiol.minervahelper"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        // Overridden from the git tag by the release workflow; the defaults are for local builds.
+        versionCode = (providers.gradleProperty("versionCode").orNull ?: "1").toInt()
+        versionName = providers.gradleProperty("versionName").orNull ?: "0.1.0"
 
         ndk {
             abiFilters += listOf("arm64-v8a", "armeabi-v7a")
@@ -100,8 +99,4 @@ dependencies {
     implementation(libs.libtorrent4j)
     implementation(libs.libtorrent4j.android.arm64)
     implementation(libs.libtorrent4j.android.arm)
-
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.test.junit)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
 }

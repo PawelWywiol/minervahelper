@@ -131,7 +131,6 @@ fun MinervaNavHost() {
             startDestination = "collections",
             modifier = Modifier.padding(padding),
         ) {
-            composable("dev") { SpikeScreen() }
             composable("onboarding") {
                 OnboardingScreen(
                     setup = setup,

@@ -131,10 +131,8 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
             val torrent = torrents.fetch(torrentPath)
 
             val result = downloader.download(torrent, stagingDir, { stillWanted(items) }) { p ->
-                Log.i(TAG, "$label ${p.percent()}% ${p.done}/${p.total} rate=${p.rate} peers=${p.peers} ${p.detail}")
                 queue.setActive(torrentPath, DownloadQueue.Active(label, p.percent(), p.rate, p.peers))
             }
-            Log.i(TAG, "$label payload uploaded=${result.payloadUploaded} B, protocol=${result.protocolOverhead} B")
             // The hard rule is checked, not assumed, and per torrent. Protocol overhead is
             // unavoidable — a peer that sends no requests downloads nothing — but file content
             // must be exactly zero.
@@ -152,7 +150,7 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
             // keeps its partial data, which is what lets it resume.
             if (finished.size == items.size) stagingDir.deleteRecursively()
         } catch (paused: SelectiveDownloader.AllPaused) {
-            Log.i(TAG, "all files paused: $torrentPath")
+            // The user paused every file in this torrent; their states are already set, nothing to do.
         } catch (cancelled: CancellationException) {
             items.forEach { queue.setState(it.id, DownloadState.QUEUED) }
             throw cancelled
@@ -241,7 +239,7 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
         val folder = destinations.folderFor(item.collection, item.platformKey)
         return runCatching { placement.place(root, folder, item.name, file) }
             .fold(
-                onSuccess = { Log.i(TAG, "placed ${item.name} in $folder"); null },
+                onSuccess = { null },
                 onFailure = {
                     Log.e(TAG, "cannot place ${item.name} in $folder", it)
                     "Could not save into $folder — ${it.message.orEmpty().ifEmpty { "check the folder" }}"

@@ -1,0 +1,78 @@
+name: Release
+
+# Tags only. Never `pull_request_target` — that would expose the signing key to a fork.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+
+      - name: Derive version from the tag
+        id: version
+        run: |
+          NAME="${GITHUB_REF_NAME#v}"
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          # Monotonic integer Android compares on update: 1.2.3 -> 10203.
+          echo "code=$(echo "$NAME" | awk -F. '{printf "%d%02d%02d", $1, $2, $3}')" >> "$GITHUB_OUTPUT"
+
+      - name: Restore the signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::error::KEYSTORE_BASE64 is not set — a release must be signed."
+            exit 1
+          fi
+          mkdir -p keystore
+          echo "$KEYSTORE_BASE64" | base64 -d > keystore/minerva-release.jks
+          cat > keystore.properties <<EOF
+          storeFile=keystore/minerva-release.jks
+          storePassword=$KEYSTORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          EOF
+
+      - name: Build the signed APK
+        run: |
+          ./gradlew :app:assembleRelease \
+            -PversionName=${{ steps.version.outputs.name }} \
+            -PversionCode=${{ steps.version.outputs.code }}
+
+      - name: Check the APK really is signed
+        run: |
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -1)
+          "$APKSIGNER" verify --print-certs app/build/outputs/apk/release/app-release.apk
+          mv app/build/outputs/apk/release/app-release.apk \
+             minerva-helper-${{ steps.version.outputs.name }}.apk
+
+      - name: Shred the key material
+        if: always()
+        run: rm -f keystore.properties keystore/minerva-release.jks
+
+      - uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
+        with:
+          files: minerva-helper-${{ steps.version.outputs.name }}.apk
+          generate_release_notes: true
+          body: |
+            Download the `.apk` below and open it on your Android device.
+            You will have to allow installing from unknown sources — this app is
+            not distributed through Google Play.
+
+            Requires Android 8.0 or newer. Tested on the Anbernic RG477V.

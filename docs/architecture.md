@@ -3,8 +3,6 @@
 Written for non-programmers, avoiding jargon where possible. Terms are explained in
 the [glossary](glossary.md).
 
-Last updated: 2026-07-21
-
 ## The flow: from a search to a finished file
 
 ```mermaid
@@ -50,13 +48,19 @@ Conversion takes **80 seconds** on the device.
 | **Downloading** (`data/download/`) | The torrent engine and pulling out only the chosen files |
 | **File placement** (`data/placement/`) | Verification, platform → folder mapping, moving into the user's folder |
 | **Settings** (`data/settings/`) | The user's choices — text size, how many downloads at once, first-run state |
-| **Game info** (`data/metadata/`) | Canonical titles and cover art, fetched without an API key ([D21](decisions.md#d21)) |
+| **Game info** (`data/metadata/`) | Canonical titles and cover art, fetched without an API key |
 | **Interface** (`ui/`) | Screens, gamepad handling |
 | **Background work** (`work/`) | Running while the app is closed, notifications |
-| **Spikes** (`spike/`) | Throwaway screens that proved the risky parts in M0; debug builds only |
 
 One torrent engine serves the whole app, not one per download — several downloads at
-once share a single session, each with its own staging folder. [Rationale](decisions.md#d23).
+once share a single session, each with its own staging folder, because libtorrent is
+built to manage many torrents in one session and running several sessions would
+multiply memory and port use for no gain.
+
+Titles and cover art come from libretro's public thumbnail server and from
+hasheous.org, both looked up by checksum and neither needing an account. Anything
+richer (descriptions, box scans from IGDB) is gated behind per-user API keys, which
+is exactly the setup hassle this app exists to avoid.
 
 ## Technologies and why
 
@@ -76,21 +80,25 @@ this is a single-module project and is meant to stay simple.
 **Downloading resumes; catalogue conversion does not.** Fetching 1.64 GB takes about
 11 minutes and resumes from where it stopped. Conversion takes 80 seconds and starts
 over if interrupted — repeating it is cheaper than guarding against a database
-corrupted mid-write. [Rationale](decisions.md#d4).
+corrupted mid-write.
 
-**The app does not share downloaded files.** Once a download finishes, the torrent is
-stopped. Importantly, this is done by stopping it and **not** by throttling upload
-speed to zero — that would cripple downloading too. Diagnosing this cost us two
-hours.
+**The app does not share downloaded files.** This is the project's hardest rule, and
+it is enforced by construction rather than by a setting: the session accepts no
+incoming connections, the unchoke limit is zero, and the torrent is removed on every
+exit path — success, failure, pause and cancel alike. After each torrent the app
+asserts that the bytes of file content uploaded were exactly zero and fails loudly if
+not. Note that this is done by *stopping* the torrent, **not** by throttling upload
+speed to zero: throttling cripples downloading too, because the protocol needs
+request traffic to flow. Any change to the torrent engine must be re-checked against
+this rule.
 
-**There are no automated tests.** Every "done" in this documentation means somebody
-ran the app on the real handheld and watched it work; the numbers in
-[progress.md](progress.md) are measurements from that device. This was a deliberate
-trade for a one-person project whose riskiest parts — a torrent swarm, a 2.4-million-row
-database, a specific handheld's gamepad — are exactly the parts a test on a build
-machine cannot honestly reproduce. The cost is real: nothing catches a regression
-except the next person to pick the device up. If this project ever grows a second
-developer, that trade should be revisited.
+**There are no automated tests.** Every "done" here means somebody ran the app on the
+real handheld and watched it work. This was a deliberate trade for a one-person
+project whose riskiest parts — a torrent swarm, a 2.4-million-row database, a specific
+handheld's gamepad — are exactly the parts a test on a build machine cannot honestly
+reproduce. The cost is real: nothing catches a regression except the next person to
+pick the device up. If this project ever grows a second developer, that trade should
+be revisited.
 
 ## One name to know
 

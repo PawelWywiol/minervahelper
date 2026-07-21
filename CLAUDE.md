@@ -12,30 +12,21 @@ Read **`docs/README.md`** — the documentation index. Then, as needed:
 | Question | File |
 |---|---|
 | What is this project and why? | `docs/project.md` |
-| What must the app do? | `docs/requirements.md` |
 | How is it built? | `docs/architecture.md` |
-| How should it look and feel? | `docs/design.md` |
-| What is left to do? | `docs/roadmap.md` |
-| What is done and measured? | `docs/progress.md` |
-| Why was it done this way? | `docs/decisions.md` |
 | What does this term mean? | `docs/glossary.md` |
+| How do I install, use and build it? | `README.md` (repo root) |
 
 ## Documentation must stay current
 
 `docs/` is public documentation for people — plain language, understandable without
-expert knowledge. It is the source of truth for project state, and it is updated
-**as work happens**, not at the end.
+expert knowledge. It describes **how the app works and how to build it**, nothing
+else. The development history (roadmap, work log, requirement tracking, decision
+record) was removed on 2026-07-21 now that the app is finished and public; it is
+still recoverable from git history if ever needed.
 
-After finishing any piece of work:
-
-1. **`docs/progress.md`** — add an entry: date, what was done, what was measured,
-   what failed. Newest first.
-2. **`docs/roadmap.md`** — update the task / milestone status.
-3. **`docs/requirements.md`** — update a requirement's status if it changed.
-4. **`docs/decisions.md`** — record the decision and its rationale, if one was made.
-
-When the user refines a requirement, update `docs/requirements.md` and note the
-change in `docs/progress.md`.
+Do not reintroduce progress logs or status tables. After finishing a piece of work,
+update `docs/` only where the described behaviour or build actually changed, and the
+root `README.md` if what the user sees changed.
 
 ## Hard rule — the app must never share files
 
@@ -56,7 +47,6 @@ against this rule.
   feature — prefer current documentation over memory.
 - Never create commits and never push. When work is done, propose a branch name
   and a commit message (git-flow + conventional commits, max 70 chars each).
-- The working directory is **not** a git repository.
 - Chat with the user in Polish; all repository content in English.
 
 ## Quick technical start

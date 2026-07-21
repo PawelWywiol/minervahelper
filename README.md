@@ -8,6 +8,16 @@ alone. It works on any Android 8.0 or newer device.
 
 Repository: <https://github.com/PawelWywiol/minervahelper>
 
+## Install it
+
+Download the latest `.apk` from
+[**Releases**](https://github.com/PawelWywiol/minervahelper/releases) and open it on
+your device. Android will ask you to allow installing from unknown sources — that is
+normal for an app not distributed through Google Play.
+
+Requires Android 8.0 or newer. If you would rather build it yourself, see
+[Building it yourself](#building-it-yourself) below.
+
 ---
 
 ## The problem it solves
@@ -113,15 +123,13 @@ responsibility for it.
 - **adb**, to install onto a device
 - A device running **Android 8.0 or newer**, with USB debugging enabled
 
-**A note on JDK 17:** `gradle.properties` currently pins an absolute path to the
-author's machine:
+**A note on JDK 17:** the build uses whatever JDK is on your path. If `java -version`
+reports something other than 17, point Gradle at the right one in your **own**
+`~/.gradle/gradle.properties` (not in this repository, so the path stays yours):
 
 ```properties
-org.gradle.java.home=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home
+org.gradle.java.home=/path/to/your/jdk-17
 ```
-
-If you are building anywhere else, change that line to your own JDK 17 path, or delete
-it if `java -version` already reports 17.
 
 **Build and install the debug version:**
 
@@ -145,13 +153,20 @@ signed with a key described by `keystore.properties`, which is deliberately not 
 this repository — you will need to create your own with `keytool`. Without it the build
 still runs, but the APK is unsigned.
 
+**Publishing a release.** Pushing a tag like `v0.2.0` triggers
+[`.github/workflows/release.yml`](.github/workflows/release.yml), which builds a signed
+APK, verifies its signature, and attaches it to a GitHub release. The version number
+comes from the tag, so `build.gradle.kts` never has to be edited for a release. Signing
+needs four repository secrets: `KEYSTORE_BASE64` (the `.jks` file,
+`base64 -i keystore/minerva-release.jks`), `KEYSTORE_PASSWORD`, `KEY_ALIAS` and
+`KEY_PASSWORD`.
+
 ---
 
 ## Documentation
 
-Fuller documentation lives in [`docs/`](docs/README.md) — what the app must do, how it
-is put together, why particular decisions were made, and a log of what was built and
-measured on real hardware.
+Fuller documentation lives in [`docs/`](docs/README.md) — what the app is, how it is
+put together, and a glossary of the terms it uses.
 
 ## Licence
 
