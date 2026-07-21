@@ -26,7 +26,9 @@ android {
         versionName = providers.gradleProperty("versionName").orNull ?: "0.1.0"
 
         ndk {
-            abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+            // arm64 only. libtorrent's native libraries dominate the APK, and every Android
+            // handheld this targets has been 64-bit since Android 8.
+            abiFilters += "arm64-v8a"
         }
     }
 
@@ -98,5 +100,4 @@ dependencies {
 
     implementation(libs.libtorrent4j)
     implementation(libs.libtorrent4j.android.arm64)
-    implementation(libs.libtorrent4j.android.arm)
 }

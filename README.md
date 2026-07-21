@@ -4,7 +4,8 @@ An Android app that finds retro games in the public **MiNERVA** archive and down
 **only the ones you pick** — straight onto a handheld console, with no computer involved.
 
 Built for the **Anbernic RG477V** (GammaOS / Android 14), and usable with the gamepad
-alone. It works on any Android 8.0 or newer device.
+alone. It runs on any 64-bit device with Android 8.0 or newer — which in practice means
+any Android handheld or phone made in the last several years.
 
 Repository: <https://github.com/PawelWywiol/minervahelper>
 
@@ -15,8 +16,8 @@ Download the latest `.apk` from
 your device. Android will ask you to allow installing from unknown sources — that is
 normal for an app not distributed through Google Play.
 
-Requires Android 8.0 or newer. If you would rather build it yourself, see
-[Building it yourself](#building-it-yourself) below.
+Requires a 64-bit (arm64) device running Android 8.0 or newer. If you would rather
+build it yourself, see [Building it yourself](#building-it-yourself) below.
 
 ---
 
@@ -121,7 +122,8 @@ responsibility for it.
 - **JDK 17** — newer versions do not work with the Android Gradle Plugin used here
 - **Android SDK** (via Android Studio, or the standalone command-line tools)
 - **adb**, to install onto a device
-- A device running **Android 8.0 or newer**, with USB debugging enabled
+- A **64-bit (arm64)** device running **Android 8.0 or newer**, with USB debugging
+  enabled — the app ships arm64 native libraries only
 
 **A note on JDK 17:** the build uses whatever JDK is on your path. If `java -version`
 reports something other than 17, point Gradle at the right one in your **own**

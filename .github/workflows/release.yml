@@ -75,4 +75,5 @@ jobs:
             You will have to allow installing from unknown sources — this app is
             not distributed through Google Play.
 
-            Requires Android 8.0 or newer. Tested on the Anbernic RG477V.
+            Requires a 64-bit (arm64) device running Android 8.0 or newer.
+            Tested on the Anbernic RG477V.
