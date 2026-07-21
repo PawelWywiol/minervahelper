@@ -1,0 +1,179 @@
+slug,display_name,media
+3do,3DO Interactive Multiplayer,disc
+adam,Coleco Adam,floppy
+amiga,Commodore Amiga,floppy
+amiga1200,Commodore Amiga 1200,floppy
+amiga600,Commodore Amiga 600,floppy
+amigacd32,Commodore Amiga CD32,disc
+amstradcpc,Amstrad CPC,tape
+androidapps,Android Apps,computer
+androidgames,Android Games,computer
+apple2,Apple II,floppy
+apple2gs,Apple IIGS,floppy
+arcade,Arcade,arcade
+arcadia,Emerson Arcadia 2001,cartridge
+archimedes,Acorn Archimedes,floppy
+arduboy,Arduboy Miniature Game System,handheld
+astrocde,Bally Astrocade,cartridge
+atari2600,Atari 2600,cartridge
+atari5200,Atari 5200,cartridge
+atari7800,Atari 7800 ProSystem,cartridge
+atari800,Atari 800,floppy
+atarijaguar,Atari Jaguar,cartridge
+atarilynx,Atari Lynx,handheld
+atarist,Atari ST,floppy
+atarixe,Atari XE,cartridge
+atomiswave,Sammy Corporation Atomiswave,arcade
+bbcmicro,Acorn Computers BBC Micro,floppy
+c64,Commodore 64,floppy
+cdimono1,Philips CD-i,disc
+cdtv,Commodore CDTV,disc
+chailove,ChaiLove Game Engine,computer
+channelf,Fairchild Channel F,cartridge
+coco,Tandy Color Computer,floppy
+colecovision,Coleco ColecoVision,cartridge
+consolearcade,Console Arcade Systems,arcade
+cps,Capcom Play System,arcade
+cps1,Capcom Play System I,arcade
+cps2,Capcom Play System II,arcade
+cps3,Capcom Play System III,arcade
+crvision,VTech CreatiVision,cartridge
+daphne,Daphne Arcade LaserDisc Emulator,arcade
+doom,Doom,computer
+dos,DOS (PC),floppy
+dragon32,Dragon Data Dragon 32,floppy
+dreamcast,Sega Dreamcast,disc
+easyrpg,EasyRPG Game Engine,computer
+electron,Acorn Electron,floppy
+emulators,Emulators,computer
+epic,Epic Games Store,computer
+famicom,Nintendo Family Computer,cartridge
+fba,FinalBurn Alpha,arcade
+fbneo,FinalBurn Neo,arcade
+fds,Nintendo Famicom Disk System,floppy
+flash,Adobe Flash,computer
+fm7,Fujitsu FM-7,floppy
+fmtowns,Fujitsu FM Towns,floppy
+gamate,Bit Corporation Gamate,handheld
+gameandwatch,Nintendo Game and Watch,handheld
+gamecom,Tiger Electronics Game.com,handheld
+gamegear,Sega Game Gear,handheld
+gb,Nintendo Game Boy,handheld
+gba,Nintendo Game Boy Advance,handheld
+gbc,Nintendo Game Boy Color,handheld
+gc,Nintendo GameCube,disc
+genesis,Sega Genesis,cartridge
+gmaster,Hartung Game Master,handheld
+gx4000,Amstrad GX4000,cartridge
+intellivision,Mattel Electronics Intellivision,cartridge
+j2me,Java 2 Micro Edition (J2ME),handheld
+laserdisc,LaserDisc Games,arcade
+lcdgames,LCD Handheld Games,handheld
+lowresnx,LowRes NX Fantasy Console,computer
+lutro,Lutro Game Engine,computer
+macintosh,Apple Macintosh,floppy
+mame,Multiple Arcade Machine Emulator,arcade
+mark3,Sega Mark III,cartridge
+mastersystem,Sega Master System,cartridge
+megacd,Sega Mega-CD,disc
+megacdjp,Sega Mega-CD,disc
+megadrive,Sega Mega Drive,cartridge
+megadrivejp,Sega Mega Drive,cartridge
+megaduck,Creatronic Mega Duck,handheld
+mess,Multi Emulator Super System,arcade
+model2,Sega Model 2,arcade
+model3,Sega Model 3,arcade
+moto,Thomson MO/TO Series,floppy
+msx,MSX,floppy
+msx1,MSX1,floppy
+msx2,MSX2,floppy
+msxturbor,MSX Turbo R,floppy
+multivision,Othello Multivision,cartridge
+n3ds,Nintendo 3DS,handheld
+n64,Nintendo 64,cartridge
+n64dd,Nintendo 64DD,cartridge
+naomi,Sega NAOMI,arcade
+naomi2,Sega NAOMI 2,arcade
+naomigd,Sega NAOMI GD-ROM,arcade
+nds,Nintendo DS,handheld
+neogeo,SNK Neo Geo,arcade
+neogeocd,SNK Neo Geo CD,disc
+neogeocdjp,SNK Neo Geo CD,disc
+nes,Nintendo Entertainment System,cartridge
+ngage,Nokia N-Gage,handheld
+ngp,SNK Neo Geo Pocket,handheld
+ngpc,SNK Neo Geo Pocket Color,handheld
+odyssey2,Magnavox Odyssey 2,cartridge
+openbor,OpenBOR Game Engine,computer
+oric,Tangerine Computer Systems Oric,floppy
+palm,Palm OS,handheld
+pc,IBM PC,floppy
+pc88,NEC PC-8800 Series,floppy
+pc98,NEC PC-9800 Series,floppy
+pcarcade,PC Arcade Systems,arcade
+pcengine,NEC PC Engine,cartridge
+pcenginecd,NEC PC Engine CD,disc
+pcfx,NEC PC-FX,disc
+pico8,PICO-8 Fantasy Console,computer
+plus4,Commodore Plus/4,floppy
+pokemini,Nintendo Pokémon Mini,handheld
+ports,Ports,computer
+ps2,Sony PlayStation 2,disc
+ps3,Sony PlayStation 3,disc
+psp,Sony PlayStation Portable,handheld
+psvita,Sony PlayStation Vita,handheld
+psx,Sony PlayStation,disc
+pv1000,Casio PV-1000,cartridge
+quake,Quake,computer
+samcoupe,MGT SAM Coupé,floppy
+satellaview,Nintendo Satellaview,cartridge
+saturn,Sega Saturn,disc
+saturnjp,Sega Saturn,disc
+scummvm,ScummVM Game Engine,computer
+scv,Epoch Super Cassette Vision,cartridge
+sega32x,Sega Mega Drive 32X,cartridge
+sega32xjp,Sega Super 32X,cartridge
+sega32xna,Sega Genesis 32X,cartridge
+segacd,Sega CD,disc
+sfc,Nintendo SFC (Super Famicom),cartridge
+sg-1000,Sega SG-1000,cartridge
+sgb,Nintendo Super Game Boy,handheld
+snes,Nintendo SNES (Super Nintendo),cartridge
+snesna,Nintendo SNES (Super Nintendo),cartridge
+spectravideo,Spectravideo,floppy
+steam,Valve Steam,computer
+stv,Sega Titan Video Game System,arcade
+sufami,Bandai SuFami Turbo,cartridge
+supergrafx,NEC SuperGrafx,cartridge
+supervision,Watara Supervision,handheld
+supracan,Funtech Super A'Can,cartridge
+switch,Nintendo Switch,handheld
+symbian,Symbian,handheld
+tanodragon,Tano Dragon,floppy
+tg-cd,NEC TurboGrafx-CD,disc
+tg16,NEC TurboGrafx-16,cartridge
+ti99,Texas Instruments TI-99,floppy
+tic80,TIC-80 Fantasy Computer,computer
+to8,Thomson TO8,floppy
+type-x,Taito Type X,arcade
+uzebox,Uzebox Open Source Console,cartridge
+vectrex,GCE Vectrex,cartridge
+vic20,Commodore VIC-20,floppy
+videopac,Philips Videopac G7000,cartridge
+vircon32,Vircon32 Virtual Console,computer
+virtualboy,Nintendo Virtual Boy,handheld
+vpinball,Visual Pinball,arcade
+vsmile,VTech V.Smile,handheld
+wasm4,WASM-4 Fantasy Console,computer
+wii,Nintendo Wii,disc
+wiiu,Nintendo Wii U,disc
+windows,Microsoft Windows,computer
+windows3x,Microsoft Windows 3.x,floppy
+windows9x,Microsoft Windows 9x,computer
+wonderswan,Bandai WonderSwan,handheld
+wonderswancolor,Bandai WonderSwan Color,handheld
+x1,Sharp X1,floppy
+x68000,Sharp X68000,floppy
+zmachine,Infocom Z-machine,computer
+zx81,Sinclair ZX81,tape
+zxspectrum,Sinclair ZX Spectrum,tape

@@ -3,7 +3,10 @@ package com.pawelwywiol.minervahelper.ui
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 
 /**
  * Dark-first: the app lives on a gaming handheld between launchers and emulators that are all
@@ -29,7 +32,18 @@ private val Scheme = darkColorScheme(
     surfaceContainerHighest = Color(0xFF2B2F38),
 )
 
+/**
+ * [fontScale] multiplies the device's own text scaling rather than replacing the type scale.
+ * Nothing in this app hardcodes a text size — every size comes from a `MaterialTheme.typography`
+ * token — so scaling the density here reaches all of it, including Material's own components,
+ * without a single call site knowing about the setting.
+ */
 @Composable
-fun MinervaTheme(content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = Scheme, content = content)
+fun MinervaTheme(fontScale: Float = 1f, content: @Composable () -> Unit) {
+    val density = LocalDensity.current
+    CompositionLocalProvider(
+        LocalDensity provides Density(density.density, density.fontScale * fontScale),
+    ) {
+        MaterialTheme(colorScheme = Scheme, content = content)
+    }
 }

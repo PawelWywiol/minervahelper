@@ -380,3 +380,54 @@ here, not function, and decoration is not worth a login screen.
 **Cost:** no game descriptions for now (would need an API key — a future opt-in), and
 covers miss when a file name differs from the thumbnail server's naming (TOSEC's
 decorated names often miss where No-Intro's clean names hit).
+
+---
+
+<a id="d22"></a>
+## D22 — Drawn media icons, not console logos
+
+**Decision:** list rows carry one of nine icons we drew — cartridge, disc, floppy,
+tape, arcade cabinet, handheld, computer, document, unknown — chosen by what the
+software came on, not by who made the machine.
+
+**Why:** the obvious alternative was a set of console logos, and the obvious sources
+do not survive inspection. The two comprehensive collections on GitHub
+(`HVR88/Monochrome-Gaming-Logos`, `Jaffacakelover/emulator-icons-svg`) carry **no
+licence at all** and consist of manufacturer trademarks; the one MIT-licensed set
+(`scurker/gamicons`) is nineteen low-resolution images last touched in 2015. None of
+them comes close to covering this archive's 1,591 platforms, and a fifth of the
+archive — scans, manuals, loose disk images — has no console behind it to put a logo
+on. Nine shapes cover all of it, tint themselves with the theme, and add about five
+kilobytes.
+
+A trap found on the device: whole collections map to a single folder, so FinalBurn
+Neo's `megadrive` platform read "Arcade" on a screen titled "megadrive". The
+platform's own key now wins over the collection's slug for naming and icons, while
+placement still uses the slug — display and folder are deliberately allowed to differ.
+
+**Cost:** two Mega Drive games and two SNES games look alike at a glance. The row
+text carries the system name, which is the part that actually identifies it.
+
+---
+
+<a id="d23"></a>
+## D23 — One torrent session for the whole run, staging per torrent
+
+**Decision:** downloading several torrents at once shares a single libtorrent session,
+and each torrent stages its files in its own folder.
+
+**Why:** the engine previously opened a session per download, which was invisible
+while only one ran at a time. Running several that way would start a separate DHT node
+each — peer discovery is the expensive part on this device, and this archive depends
+on DHT because the torrents' own trackers are dead ([D18](#d18)). Staging was worse
+than merely wasteful: every download wrote into one shared folder that was deleted on
+success, so one finishing would have wiped a neighbour's half-finished data.
+
+The non-sharing rule is unaffected and was re-checked rather than assumed: uploaded
+payload is counted per torrent handle, so the "must be exactly 0" test still means what
+it meant. The handle is now removed on every exit path, not only on success — with a
+session that outlives the download, a handle left behind would be a seed.
+
+**Cost:** a fault in the shared session would affect every running download rather
+than one. The limit is capped at four for that reason, and because past three the
+device spends more time finding peers than fetching files.

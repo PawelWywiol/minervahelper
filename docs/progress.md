@@ -7,6 +7,68 @@ unresolved. Claims without measurements do not belong here.
 
 ---
 
+## 2026-07-21 — M8: a queue the owner steers, and text you can read
+
+Five things the owner asked for after using the app on the device. All done and
+tested on the RG477V.
+
+**Several downloads at once, and you choose how many.** The engine used to work
+through one torrent at a time. It now runs up to four side by side, set in
+Settings, default two. Measured on the device: two torrents reported progress in
+the same second, and **each one uploaded 0 bytes of file content** — the
+non-sharing rule was re-checked per torrent, because the change was structural.
+
+Two faults had to be fixed to make it safe. Every download used to open its own
+torrent session, which would have multiplied peer discovery — the expensive part
+on this hardware — so they now share one. And every download used to stage files
+in the same folder, which one finishing wiped clean; with downloads running side
+by side that would have destroyed a neighbour's half-finished data. Each torrent
+now stages in its own folder.
+
+**A game added mid-run no longer waits for a whole separate run.** Found while
+testing: with the limit at two, a third game queued during a download sat idle
+until everything before it finished — "downloads at once: 2" quietly doing one.
+The worker now re-reads the queue between batches.
+
+**Order the queue yourself.** Drag a torrent by its handle, or use its arrows.
+Both were tested; both persist. The unit is the torrent, not the single game,
+because a torrent's files are fetched together — per-game order would have been
+a fiction. Order survives a restart (the queue database moved to version 4 on the
+owner's real data, with the download history intact).
+
+**Pause one game, not everything.** A paused game drops out of a running torrent
+within a second — measured — while the rest keep going; the engine simply stops
+wanting that file. Whole torrents can be paused too, and "Pause all" is still
+there.
+
+**Browse steps up one level.** It used to jump straight to the top and throw away
+the levels in between. From a game list it now lands on that collection's
+platforms, and only the next press reaches the collections.
+
+**Rows say what system a game is for, with an icon.** Browse rows showed only a
+name and a size. They now read "Sega Mega Drive · 270 kB" with a small icon of
+the medium — cartridge, disc, floppy, tape, arcade cabinet, handheld, computer,
+document. A trap found on the device: whole collections map to one folder, so
+FinalBurn Neo's Mega Drive games were labelled "Arcade" on a screen titled
+"megadrive". The platform's own name now wins for the label, while the file still
+lands in the `arcade` folder as before.
+
+**Text size is adjustable**, −20% to +100%, in Settings. Because nothing in the
+app hardcodes a text size, one setting reaches every screen. Checked at +100% on
+the device: the two-pane game screen still works and the bottom menu is not
+clipped, so no separate small-screen layout was needed.
+
+**One rendering bug found and fixed while testing.** Moving a torrent to the top
+with the arrows made it appear to vanish — the list keeps its scroll anchored to
+whatever was on top, so the promoted group ended up above the visible area. The
+database was correct throughout; only the view had slid. It now stays put.
+
+Not fixed: the Lost Level torrent used in testing has no sharers at all (0 peers
+over several minutes), so it never progressed. That is the archive's swarm, not
+the app — the same run downloaded three other torrents without trouble.
+
+---
+
 ## 2026-07-20 — Owner's M7 review fixes, game covers, and release signing
 
 The owner accepted M7 with three fixes, all done and tested on the device:

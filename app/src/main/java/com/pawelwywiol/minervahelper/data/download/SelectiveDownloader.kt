@@ -57,8 +57,10 @@ class TorrentCache(private val dir: File, private val http: OkHttpClient) {
  *    this device and ask for data;
  * 2. the unchoke limit is zero, so no peer is ever permitted to receive file content on a
  *    connection we opened either;
- * 3. the torrent is removed as soon as the wanted files are complete — it never becomes a seed;
- * 4. [Result.payloadUploaded] is checked by the caller and must be 0.
+ * 3. the torrent is removed the moment the download leaves, on every path including failure — it
+ *    never becomes a seed. This matters more now the session is shared and outlives one download:
+ *    a handle left behind would keep serving from a session that is still running;
+ * 4. [Result.payloadUploaded] is checked by the caller, per torrent, and must be 0.
  *
  * Uploading is *not* prevented with an upload rate limit: that limit also covers protocol
  * overhead, which stops the client from even requesting data (proven in M0 — two minutes,
@@ -70,7 +72,16 @@ class TorrentCache(private val dir: File, private val http: OkHttpClient) {
  * discoverable, but discovery is not sharing: an inbound connection cannot be established, and an
  * outbound one is never unchoked.
  */
-class SelectiveDownloader {
+class SelectiveDownloader(private val maxConcurrent: Int = 1) : AutoCloseable {
+
+    /**
+     * One session for every torrent, not one per download. A session binds ports and runs its own
+     * DHT node; starting several would multiply peer discovery — the expensive part on this
+     * hardware — without fetching a single extra byte.
+     */
+    private val session by lazy {
+        SessionManager().also { it.start(SessionParams(noSharingSettings())) }
+    }
 
     /** No peer offered any data for [STALL_LIMIT_SECONDS]; [peers] is how many were connected. */
     class Stalled(val peers: Int) : Exception("no progress for ${STALL_LIMIT_SECONDS}s (peers=$peers)")
@@ -85,29 +96,30 @@ class SelectiveDownloader {
         val detail: String = "",
     )
 
+    /**
+     * [wantedNow] is re-read on every tick rather than taken once, so pausing a single ROM inside a
+     * running torrent takes effect within the second — the file drops to [Priority.IGNORE] and the
+     * target size shrinks to match. Returning an empty set cancels the download.
+     */
     suspend fun download(
         torrent: File,
-        soIds: Set<Int>,
         targetDir: File,
+        wantedNow: () -> Set<Int>,
         onProgress: suspend (Progress) -> Unit,
     ): Result = withContext(Dispatchers.IO) {
         val info = loadTorrentInfo(torrent)
-        val wanted = soIds.filter { it in 0 until info.numFiles() }.toSet()
+        var wanted = info.validate(wantedNow())
         require(wanted.isNotEmpty()) { "no valid file indexes for ${torrent.name}" }
 
         targetDir.mkdirs()
-        val session = SessionManager()
         var uploaded = 0L
         var overhead = 0L
+        val handle = run {
+            session.download(info, targetDir, null, info.priorities(wanted), null, torrent_flags_t())
+            checkNotNull(session.find(info.infoHash())) { "no torrent handle" }
+        }
         try {
-            session.start(SessionParams(noSharingSettings()))
-
-            val priorities = Array(info.numFiles()) { Priority.IGNORE }
-            wanted.forEach { priorities[it] = Priority.DEFAULT }
-            session.download(info, targetDir, null, priorities, null, torrent_flags_t())
-
-            val handle = checkNotNull(session.find(info.infoHash())) { "no torrent handle" }
-            val total = wanted.sumOf { info.files().fileSize(it) }
+            var total = wanted.sumOf { info.files().fileSize(it) }
             var stalledFor = 0
             var lastDone = -1L
 
@@ -120,6 +132,14 @@ class SelectiveDownloader {
                 if (status.isFinished || status.progress() >= 1f) {
                     overhead = status.totalUpload()
                     break
+                }
+                val requested = info.validate(wantedNow())
+                if (requested != wanted) {
+                    if (requested.isEmpty()) throw AllPaused()
+                    wanted = requested
+                    handle.prioritizeFiles(info.priorities(wanted))
+                    total = wanted.sumOf { info.files().fileSize(it) }
+                    stalledFor = 0
                 }
                 stalledFor = if (done == lastDone) stalledFor + 1 else 0
                 lastDone = done
@@ -135,19 +155,31 @@ class SelectiveDownloader {
                 delay(1000)
             }
             onProgress(Progress(total, total, 0, 0))
-            // Removed before the session is even stopped: a finished torrent left in a running
-            // session is, by definition, a seed.
-            session.remove(handle)
             Result(payloadUploaded = uploaded, protocolOverhead = overhead)
         } finally {
-            session.stop()
+            // Always, not only on success: a finished torrent left in a running session is by
+            // definition a seed, and the session now outlives the download.
+            session.remove(handle)
         }
     }
+
+    /** Every wanted file is paused, so there is nothing left for this torrent to fetch. */
+    class AllPaused : Exception("all files paused")
+
+    override fun close() {
+        session.stop()
+    }
+
+    private fun TorrentInfo.validate(soIds: Set<Int>): Set<Int> =
+        soIds.filterTo(mutableSetOf()) { it in 0 until numFiles() }
+
+    private fun TorrentInfo.priorities(wanted: Set<Int>): Array<Priority> =
+        Array(numFiles()) { if (it in wanted) Priority.DEFAULT else Priority.IGNORE }
 
     private fun noSharingSettings() = SettingsPack().apply {
         downloadRateLimit(0)
         uploadRateLimit(0)
-        activeDownloads(1)
+        activeDownloads(maxConcurrent)
         activeSeeds(0)
         setBoolean(settings_pack.bool_types.enable_incoming_tcp.swigValue(), false)
         setBoolean(settings_pack.bool_types.enable_incoming_utp.swigValue(), false)

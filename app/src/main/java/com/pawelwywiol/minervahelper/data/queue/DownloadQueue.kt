@@ -10,7 +10,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import com.pawelwywiol.minervahelper.data.catalog.CatalogReader
 
-enum class DownloadState { QUEUED, DOWNLOADING, VERIFYING, DONE, FAILED }
+enum class DownloadState { QUEUED, DOWNLOADING, VERIFYING, DONE, FAILED, PAUSED }
 
 data class QueueItem(
     val id: Long,
@@ -43,14 +43,14 @@ data class DownloadedItem(
  */
 class DownloadQueue(context: Context) {
 
-    private val helper = object : SQLiteOpenHelper(context, "queue.db", null, 3) {
+    private val helper = object : SQLiteOpenHelper(context, "queue.db", null, 4) {
         override fun onCreate(db: SQLiteDatabase) {
             db.execSQL(
                 "CREATE TABLE item(" +
                     "id INTEGER PRIMARY KEY, name TEXT NOT NULL, size INTEGER NOT NULL," +
                     "collection TEXT NOT NULL, platform_key TEXT NOT NULL, torrent_path TEXT NOT NULL," +
                     "so_id INTEGER NOT NULL, md5 TEXT, sha1 TEXT, state TEXT NOT NULL," +
-                    "error TEXT, added_at INTEGER NOT NULL)"
+                    "error TEXT, added_at INTEGER NOT NULL, position INTEGER NOT NULL DEFAULT 0)"
             )
             db.execSQL("CREATE UNIQUE INDEX ux_item ON item(torrent_path, so_id)")
             db.execSQL(DOWNLOADED_TABLE)
@@ -73,6 +73,10 @@ class DownloadQueue(context: Context) {
                 )
                 db.execSQL("DELETE FROM item WHERE state = '${DownloadState.DONE.name}'")
             }
+            if (old < 4) {
+                db.execSQL("ALTER TABLE item ADD COLUMN position INTEGER NOT NULL DEFAULT 0")
+                backfillPositions(db)
+            }
         }
     }
 
@@ -81,12 +85,24 @@ class DownloadQueue(context: Context) {
         private set
 
     /**
-     * What the worker is doing right now. Held in memory rather than in the table: it changes every
-     * second and is meaningless once the worker stops.
+     * What the worker is doing right now, one entry per torrent being fetched. Held in memory
+     * rather than in the table: it changes every second and is meaningless once the worker stops.
      */
-    var active by mutableStateOf<Active?>(null)
+    var active by mutableStateOf<Map<String, Active>>(emptyMap())
+        private set
 
     data class Active(val label: String, val percent: Int, val rate: Int, val peers: Int)
+
+    /** Several download coroutines report at once, so the map is only ever replaced under a lock. */
+    @Synchronized
+    fun setActive(torrentPath: String, value: Active?) {
+        active = if (value == null) active - torrentPath else active + (torrentPath to value)
+    }
+
+    @Synchronized
+    fun clearActive() {
+        active = emptyMap()
+    }
 
     /**
      * A worker killed mid-download leaves rows claiming to be downloading. Nothing is downloading
@@ -113,10 +129,27 @@ class DownloadQueue(context: Context) {
             "item", "torrent_path = ? AND so_id = ?",
             arrayOf(rom.torrentPath, rom.soId.toString()),
         )
-        if (removed == 0) db.insert("item", null, rom.toValues())
+        if (removed == 0) db.insert("item", null, rom.toValues(positionFor(rom.torrentPath)))
         revision++
         return removed == 0
     }
+
+    /**
+     * A ROM joins the position its torrent already holds; a torrent new to the queue goes last.
+     * Otherwise adding a second file from a torrent already at the front would send it to the back.
+     */
+    private fun positionFor(torrentPath: String): Int =
+        helper.readableDatabase.rawQuery(
+            "SELECT MIN(position) FROM item WHERE torrent_path = ?",
+            arrayOf(torrentPath),
+        ).use { c ->
+            if (c.moveToFirst() && !c.isNull(0)) c.getInt(0) else nextPosition()
+        }
+
+    private fun nextPosition(): Int =
+        helper.readableDatabase.rawQuery("SELECT MAX(position) FROM item", null).use { c ->
+            if (c.moveToFirst() && !c.isNull(0)) c.getInt(0) + 1 else 0
+        }
 
     /** A finished download leaves the queue and becomes a downloaded record (R37). */
     fun markDownloaded(item: QueueItem, folder: String) {
@@ -225,6 +258,71 @@ class DownloadQueue(context: Context) {
         revision++
     }
 
+    /**
+     * A paused item is skipped by the worker, which only ever picks up QUEUED rows. Pausing one
+     * that is downloading right now takes effect within a second: the engine re-reads the wanted
+     * set on every progress tick and deprioritises the file inside the live torrent.
+     */
+    fun setPaused(id: Long, paused: Boolean) {
+        helper.writableDatabase.execSQL(
+            "UPDATE item SET state = ?, error = NULL WHERE id = ? AND state IN (?, ?, ?)",
+            arrayOf<Any>(
+                if (paused) DownloadState.PAUSED.name else DownloadState.QUEUED.name, id,
+                DownloadState.QUEUED.name, DownloadState.PAUSED.name, DownloadState.DOWNLOADING.name,
+            ),
+        )
+        revision++
+    }
+
+    /** Polled once a second by a running download, so it reads the ids alone rather than every row. */
+    fun pausedIds(): Set<Long> =
+        helper.readableDatabase.rawQuery(
+            "SELECT id FROM item WHERE state = ?",
+            arrayOf(DownloadState.PAUSED.name),
+        ).use { c -> buildSet { while (c.moveToNext()) add(c.getLong(0)) } }
+
+    fun setGroupPaused(torrentPath: String, paused: Boolean) {
+        helper.writableDatabase.execSQL(
+            "UPDATE item SET state = ?, error = NULL WHERE torrent_path = ? AND state IN (?, ?, ?)",
+            arrayOf<Any>(
+                if (paused) DownloadState.PAUSED.name else DownloadState.QUEUED.name, torrentPath,
+                DownloadState.QUEUED.name, DownloadState.PAUSED.name, DownloadState.DOWNLOADING.name,
+            ),
+        )
+        revision++
+    }
+
+    /**
+     * Reorders whole torrents, not single ROMs: one torrent is opened once and all its wanted
+     * files are fetched together, so a ROM cannot overtake its own siblings.
+     */
+    fun moveGroup(from: Int, to: Int) {
+        val order = groupOrder().toMutableList()
+        if (from !in order.indices || to !in order.indices || from == to) return
+        order.add(to, order.removeAt(from))
+        val db = helper.writableDatabase
+        db.beginTransaction()
+        try {
+            order.forEachIndexed { index, torrentPath ->
+                db.execSQL(
+                    "UPDATE item SET position = ? WHERE torrent_path = ?",
+                    arrayOf<Any>(index, torrentPath),
+                )
+            }
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
+        }
+        revision++
+    }
+
+    private fun groupOrder(): List<String> =
+        helper.readableDatabase.rawQuery(
+            "SELECT torrent_path FROM item GROUP BY torrent_path " +
+                "ORDER BY MIN(position), MIN(added_at), MIN(id)",
+            null,
+        ).use { c -> buildList { while (c.moveToNext()) add(c.getString(0)) } }
+
     /** Puts every failed item back in the queue, clearing the reason it failed with. */
     fun retryFailed() {
         helper.writableDatabase.execSQL(
@@ -237,13 +335,15 @@ class DownloadQueue(context: Context) {
     /**
      * Grouped by torrent because that is how they will be fetched: one torrent is opened once and
      * every wanted file inside it is selected together, instead of once per ROM.
+     *
+     * The map keeps [all]'s order, so the first entry is the group the user put first.
      */
     fun byTorrent(): Map<String, List<QueueItem>> = all().groupBy { it.torrentPath }
 
     fun all(): List<QueueItem> =
         helper.readableDatabase.rawQuery(
             "SELECT id, name, size, collection, platform_key, torrent_path, so_id, md5, sha1, state, error " +
-                "FROM item ORDER BY added_at, id",
+                "FROM item ORDER BY position, added_at, id",
             null,
         ).use { c ->
             buildList {
@@ -293,7 +393,7 @@ class DownloadQueue(context: Context) {
             "CREATE UNIQUE INDEX ux_downloaded ON downloaded(torrent_path, so_id)"
     }
 
-    private fun CatalogReader.Rom.toValues() = ContentValues().apply {
+    private fun CatalogReader.Rom.toValues(position: Int) = ContentValues().apply {
         put("name", name)
         put("size", size)
         put("collection", collection)
@@ -304,5 +404,20 @@ class DownloadQueue(context: Context) {
         put("sha1", sha1)
         put("state", DownloadState.QUEUED.name)
         put("added_at", System.currentTimeMillis())
+        put("position", position)
+    }
+}
+
+/**
+ * Existing queues have no order beyond when things were added, so the first ordering must
+ * reproduce exactly what the user already saw: torrents ranked by their oldest item.
+ */
+private fun backfillPositions(db: SQLiteDatabase) {
+    val paths = db.rawQuery(
+        "SELECT torrent_path FROM item GROUP BY torrent_path ORDER BY MIN(added_at), MIN(id)",
+        null,
+    ).use { c -> buildList { while (c.moveToNext()) add(c.getString(0)) } }
+    paths.forEachIndexed { index, path ->
+        db.execSQL("UPDATE item SET position = ? WHERE torrent_path = ?", arrayOf<Any>(index, path))
     }
 }

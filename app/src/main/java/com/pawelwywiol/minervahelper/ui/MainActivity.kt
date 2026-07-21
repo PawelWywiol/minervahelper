@@ -6,7 +6,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import com.pawelwywiol.minervahelper.data.settings.Preferences
 
 class MainActivity : ComponentActivity() {
     override fun dispatchKeyEvent(event: KeyEvent): Boolean =
@@ -15,7 +17,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MinervaTheme {
+            val preferences = remember { Preferences.get(this) }
+            MinervaTheme(fontScale = preferences.fontScale) {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     MinervaNavHost()
                 }

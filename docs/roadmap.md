@@ -17,6 +17,7 @@ Last updated: 2026-07-20
 | **M5** | Onboarding, settings, battery | ✅ **done** |
 | **M6** | Hardening and release | 🟡 |
 | **M7** | **User experience overhaul** — navigation, automatic queue, visual identity | ✅ **done** — owner's device-in-hand acceptance pending |
+| **M8** | **Queue control and readability** — parallel downloads, priority, per-item pause, text size | ✅ **done** — owner's device-in-hand acceptance pending |
 
 ---
 
@@ -175,6 +176,31 @@ Four packages, in order — structure before paint:
 **Done when:** a person who has never seen the app finds a game, downloads it and
 knows it succeeded — without instructions, by touch alone; and the same flow works
 by D-pad alone. Tested with the device in hand, screen by screen.
+
+## ✅ M8 — Queue control and readability
+
+Added 2026-07-21 from the owner's use of the app on the device. Everything here was
+tested on the RG477V; measurements are in [progress.md](progress.md).
+
+- [x] **Several downloads at once** (R42), how many chosen in Settings, default 2 of
+      1–4. Required one shared torrent session instead of one per download, and a
+      staging folder per torrent instead of one shared folder ([D23](decisions.md#d23)).
+      Non-sharing re-verified per torrent: 0 bytes of file content, every run
+- [x] **The queue's order is the download order** (R43) — drag a torrent by its
+      handle or use its arrows. The unit is the torrent, not the game, because a
+      torrent's files are fetched together. Order survives a restart
+- [x] **Pause and resume one game** (R44) without stopping the rest — takes effect
+      inside a second on a running torrent
+- [x] A game queued while a run is going joins that run instead of waiting for a
+      separate one — found in testing
+- [x] **Browse steps up one level** (R45) instead of jumping to the top
+- [x] **System name and a medium icon on every row** (R46) — nine drawn icons, no
+      manufacturer logos ([D22](decisions.md#d22))
+- [x] **Adjustable text size** (R47), −20% to +100%, one setting for the whole app
+
+**Done when:** the owner can say which game downloads first, stop one without
+stopping the others, and read the screen at arm's length. Tested with the device in
+hand.
 
 ---
 

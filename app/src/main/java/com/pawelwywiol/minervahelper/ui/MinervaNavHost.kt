@@ -94,12 +94,19 @@ fun MinervaNavHost() {
                             selected = if (tab.route == "collections") route in BROWSE_ROUTES
                             else route == tab.route,
                             onClick = {
-                                // Browse is the home button: it always lands on the top-level list,
-                                // even from deep inside a platform (owner's request).
+                                // Browse steps one level up rather than jumping to the top: from a
+                                // ROM list it lands on the platforms of that collection, and only
+                                // the next press reaches the collections themselves. Wiping the
+                                // whole stack lost the level the user was working in.
                                 if (tab.route == "collections") {
-                                    navController.navigate("collections") {
-                                        popUpTo("collections") { inclusive = true }
-                                        launchSingleTop = true
+                                    if (route in BROWSE_ROUTES && route != "collections") {
+                                        navController.popBackStack()
+                                    } else {
+                                        navController.navigate("collections") {
+                                            popUpTo("collections") { saveState = true }
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        }
                                     }
                                 } else {
                                     navController.navigate(tab.route) {

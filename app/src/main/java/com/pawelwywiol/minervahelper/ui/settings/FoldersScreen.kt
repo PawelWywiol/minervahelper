@@ -4,6 +4,9 @@ import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,6 +20,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -26,10 +30,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.pawelwywiol.minervahelper.data.settings.FONT_SCALES
+import com.pawelwywiol.minervahelper.data.settings.MAX_CONCURRENT_DOWNLOADS
+import com.pawelwywiol.minervahelper.data.settings.MIN_CONCURRENT_DOWNLOADS
+import com.pawelwywiol.minervahelper.data.settings.Preferences
 import com.pawelwywiol.minervahelper.data.placement.Destinations
 import com.pawelwywiol.minervahelper.data.placement.FileMover
 import com.pawelwywiol.minervahelper.data.placement.FilePlacement
@@ -41,6 +48,7 @@ import com.pawelwywiol.minervahelper.ui.Screen
 import com.pawelwywiol.minervahelper.ui.initialFocus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlin.math.roundToInt
 
 private data class PlatformRow(val collection: String, val platformKey: String, val count: Int)
 
@@ -53,6 +61,7 @@ private val GRANT_FLAGS =
 fun FoldersScreen(destinations: Destinations, queue: DownloadQueue, onDev: (() -> Unit)? = null) {
     val context = LocalContext.current
     val placement = remember { FilePlacement(context) }
+    val preferences = remember { Preferences.get(context) }
     var editing by remember { mutableStateOf<PlatformRow?>(null) }
     var pendingRoot by remember { mutableStateOf<Uri?>(null) }
     var pendingFolderMove by remember { mutableStateOf<PendingFolderMove?>(null) }
@@ -109,6 +118,36 @@ fun FoldersScreen(destinations: Destinations, queue: DownloadQueue, onDev: (() -
                 Spacer(Modifier.height(4.dp))
                 Text(it, style = MaterialTheme.typography.bodySmall)
             }
+            Spacer(Modifier.height(16.dp))
+            Text("Text size", style = MaterialTheme.typography.titleSmall)
+            Text(
+                "Everything in the app grows with this.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(4.dp))
+            ChoiceRow(
+                options = FONT_SCALES,
+                current = preferences.fontScale,
+                label = { scale ->
+                    if (scale == 1.0f) "Default" else "%+d%%".format(((scale - 1f) * 100).roundToInt())
+                },
+                onSelect = preferences::updateFontScale,
+            )
+            Spacer(Modifier.height(16.dp))
+            Text("Downloads at once", style = MaterialTheme.typography.titleSmall)
+            Text(
+                "More is not always faster — each torrent has to find its own sharers.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(4.dp))
+            ChoiceRow(
+                options = (MIN_CONCURRENT_DOWNLOADS..MAX_CONCURRENT_DOWNLOADS).toList(),
+                current = preferences.concurrentDownloads,
+                label = { it.toString() },
+                onSelect = preferences::updateConcurrentDownloads,
+            )
         }
         Spacer(Modifier.height(12.dp))
 
@@ -144,22 +183,23 @@ fun FoldersScreen(destinations: Destinations, queue: DownloadQueue, onDev: (() -
             )
             FocusedList(platforms) { row, focus ->
                 val mapped = destinations.isMapped(row.collection, row.platformKey)
-                FocusableRow(onClick = { editing = row }, modifier = focus) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(row.platformKey, style = MaterialTheme.typography.bodyLarge)
-                            Text(
-                                destinations.folderFor(row.collection, row.platformKey) +
-                                    " · ${row.count} ROMs" + if (mapped) "" else " · no standard folder",
-                                style = MaterialTheme.typography.bodySmall,
-                            )
-                        }
+                FocusableRow(
+                    onClick = { editing = row },
+                    modifier = focus,
+                    trailing = {
                         Icon(
                             Icons.Filled.Edit,
                             contentDescription = "Edit",
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                    }
+                    },
+                ) {
+                    Text(row.platformKey, style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        destinations.folderFor(row.collection, row.platformKey) +
+                            " · ${row.count} ROMs" + if (mapped) "" else " · no standard folder",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
                 }
             }
         }
@@ -214,6 +254,31 @@ fun FoldersScreen(destinations: Destinations, queue: DownloadQueue, onDev: (() -
                 TextButton(onClick = { pendingFolderMove = null }) { Text("Leave them") }
             },
         )
+    }
+}
+
+/**
+ * Buttons rather than a slider or a dropdown: both need a pointer to be quick, and this device is
+ * driven by a d-pad where every option is one press away.
+ */
+@Composable
+private fun <T> ChoiceRow(
+    options: List<T>,
+    current: T,
+    label: (T) -> String,
+    onSelect: (T) -> Unit,
+) = Row(
+    horizontalArrangement = Arrangement.spacedBy(8.dp),
+    // Seven text sizes do not fit across a 4.7" screen, and they fit even less once the largest is
+    // picked — the row that sets the size is itself affected by it.
+    modifier = Modifier.horizontalScroll(rememberScrollState()),
+) {
+    options.forEach { option ->
+        if (option == current) {
+            Button(onClick = { onSelect(option) }) { Text(label(option)) }
+        } else {
+            OutlinedButton(onClick = { onSelect(option) }) { Text(label(option)) }
+        }
     }
 }
 

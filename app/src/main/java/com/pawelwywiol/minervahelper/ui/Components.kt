@@ -6,9 +6,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
@@ -91,6 +93,8 @@ internal fun FocusableRow(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     selected: Boolean = false,
+    leading: @Composable (() -> Unit)? = null,
+    trailing: @Composable (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     var focused by remember { mutableStateOf(false) }
@@ -106,10 +110,20 @@ internal fun FocusableRow(
             .background(background)
             .clickable(onClick = onClick),
     ) {
-        Column(
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-            content = content,
-        )
+        ) {
+            leading?.let {
+                it()
+                Spacer(Modifier.width(12.dp))
+            }
+            Column(modifier = Modifier.weight(1f), content = content)
+            trailing?.let {
+                Spacer(Modifier.width(12.dp))
+                it()
+            }
+        }
         HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
     }
 }

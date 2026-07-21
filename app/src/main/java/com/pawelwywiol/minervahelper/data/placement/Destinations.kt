@@ -41,6 +41,13 @@ class Destinations(context: Context) {
         prefs.getString(folderKey(collection, platformKey), null)
             ?: platforms.folderFor(collection, platformKey)
 
+    /**
+     * The archive's own slug for a platform, ignoring where the user chose to put it. Naming and
+     * icons must not change just because someone renamed a folder.
+     */
+    fun slugFor(collection: String, platformKey: String): String =
+        platforms.folderFor(collection, platformKey)
+
     fun setFolder(collection: String, platformKey: String, folder: String) {
         prefs.edit { putString(folderKey(collection, platformKey), folder.trim()) }
         revision++

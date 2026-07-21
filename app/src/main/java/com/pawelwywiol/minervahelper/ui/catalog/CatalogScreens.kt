@@ -52,12 +52,14 @@ import com.pawelwywiol.minervahelper.data.catalog.CatalogSync
 import com.pawelwywiol.minervahelper.data.metadata.GameInfo
 import com.pawelwywiol.minervahelper.data.metadata.GameInfoLookup
 import com.pawelwywiol.minervahelper.data.catalog.Favourites
+import com.pawelwywiol.minervahelper.data.catalog.Systems
 import com.pawelwywiol.minervahelper.data.placement.Destinations
 import com.pawelwywiol.minervahelper.data.placement.FilePlacement
 import com.pawelwywiol.minervahelper.data.queue.DownloadQueue
 import com.pawelwywiol.minervahelper.work.DownloadWorker
 import com.pawelwywiol.minervahelper.ui.FocusableRow
 import com.pawelwywiol.minervahelper.ui.FocusedList
+import com.pawelwywiol.minervahelper.ui.MediaIcon
 import com.pawelwywiol.minervahelper.ui.Screen
 import com.pawelwywiol.minervahelper.ui.formatCount
 import com.pawelwywiol.minervahelper.ui.formatSize
@@ -157,14 +159,13 @@ fun RomsScreen(
         Row(modifier = Modifier.fillMaxSize()) {
             LazyColumn(state = listState, modifier = Modifier.weight(1f).fillMaxHeight()) {
                 itemsIndexed(pager.roms, key = { _, rom -> rom.id }) { index, rom ->
-                    FocusableRow(
+                    RomRow(
+                        rom = rom,
+                        downloadedKeys = downloadedKeys,
                         onClick = { selected = rom.id },
                         selected = rom.id == selected,
                         modifier = Modifier.initialFocus(index == 0 && !pager.trimmedAbove),
-                    ) {
-                        Text(rom.name, style = MaterialTheme.typography.bodyLarge)
-                        RomSubtitle(formatSize(rom.size), rom, downloadedKeys)
-                    }
+                    )
                 }
             }
             RomDetailPane(reader, favourites, queue, selected, Modifier.weight(1f))
@@ -222,13 +223,12 @@ fun SearchScreen(reader: CatalogReader, favourites: Favourites, queue: DownloadQ
                 val downloadedKeys = remember(queue.revision) { queue.downloadedKeys() }
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
                     items(hits, key = { it.id }) { rom ->
-                        FocusableRow(onClick = { selected = rom.id }, selected = rom.id == selected) {
-                            Text(rom.name, style = MaterialTheme.typography.bodyLarge)
-                            RomSubtitle(
-                                "${rom.collection}/${rom.platformKey} · ${formatSize(rom.size)}",
-                                rom, downloadedKeys,
-                            )
-                        }
+                        RomRow(
+                            rom = rom,
+                            downloadedKeys = downloadedKeys,
+                            onClick = { selected = rom.id },
+                            selected = rom.id == selected,
+                        )
                     }
                 }
             }
@@ -315,17 +315,13 @@ fun FavouritesScreen(reader: CatalogReader, favourites: Favourites, queue: Downl
         Row(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
                 FocusedList(roms) { rom, focus ->
-                    FocusableRow(
+                    RomRow(
+                        rom = rom,
+                        downloadedKeys = downloadedKeys,
                         onClick = { selected = rom.id },
                         selected = rom.id == selected,
                         modifier = focus,
-                    ) {
-                        Text(rom.name, style = MaterialTheme.typography.bodyLarge)
-                        RomSubtitle(
-                            "${rom.collection}/${rom.platformKey} · ${formatSize(rom.size)}",
-                            rom, downloadedKeys,
-                        )
-                    }
+                    )
                 }
             }
             RomDetailPane(reader, favourites, queue, selected, Modifier.weight(1f))
@@ -452,6 +448,36 @@ private suspend fun toggleDownload(
         }
     }
     if (added) DownloadWorker.enqueue(context)
+}
+
+/**
+ * One row shape for every list of ROMs. The medium's icon and the system's readable name are what
+ * tell a Mega Drive dump apart from an Amiga one at a glance — the file name rarely does.
+ */
+@Composable
+private fun RomRow(
+    rom: CatalogReader.Rom,
+    downloadedKeys: Set<String>,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    selected: Boolean = false,
+) {
+    val context = LocalContext.current
+    val systems = remember { Systems.get(context) }
+    val destinations = remember { Destinations.get(context) }
+    val slug = destinations.slugFor(rom.collection, rom.platformKey)
+    FocusableRow(
+        onClick = onClick,
+        selected = selected,
+        modifier = modifier,
+        leading = { MediaIcon(systems.mediaFor(rom.collection, rom.platformKey, slug)) },
+    ) {
+        Text(rom.name, style = MaterialTheme.typography.bodyLarge)
+        RomSubtitle(
+            "${systems.labelFor(rom.platformKey, slug)} · ${formatSize(rom.size)}",
+            rom, downloadedKeys,
+        )
+    }
 }
 
 @Composable
