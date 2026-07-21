@@ -51,6 +51,48 @@ acceptance of M7 and M8.
 
 ---
 
+## 2026-07-21 — Preparing to go public, and a bug hiding in plain sight
+
+The project is heading for <https://github.com/PawelWywiol/minervahelper>, so this
+round was about what a stranger sees.
+
+**The app's name changed** from `com.pawelwywiol.minervahelper` to
+`io.github.pawelwywiol.minervahelper` ([D24](decisions.md#d24)). The old one followed
+the reverse-a-domain convention without owning the domain; the new one is anchored to a
+GitHub account that genuinely is ours. Done now because after publication this name can
+never change — Android treats a different name as a different app.
+
+**The rename found a real bug.** One file, `DownloadQueue.kt`, silently refused to be
+renamed. The cause was a raw NUL byte sitting inside a string literal on line 383, used
+as a separator in a database key. A NUL is a sensible separator — it cannot appear in a
+file path — but written as a physical byte rather than the escape `\u0000` it made the
+whole file read as *binary* to `grep`, `sed`, `diff` and anything else that inspects
+text. That is why it was skipped, and it would equally have hidden the file from any
+future search. Replaced with the escape, which the compiler treats identically, so the
+keys already stored in the database still match. A byte-level scan of all 57 source
+files confirmed it was the only one.
+
+**Verified on the device rather than assumed.** The renamed app installs and runs on the
+RG477V. To check it against real data instead of an empty first run, the 521 MB
+catalogue and the settings were copied across from the old installation — the two apps
+sit side by side, so nothing was destroyed to do it.
+
+**New this round:**
+
+- **A README** for people who have never seen the project: what it is for, six
+  screenshots from the RG477V, how to build it, how to use it. It also documents that
+  `gradle.properties` pins a JDK path local to the author's Mac, which would otherwise
+  fail for anyone else on their first build.
+- **An MIT licence** — permissive, with warranty and liability disclaimed.
+- **A Help tab inside the app** (R48), because a guide in a repository is a guide the
+  person holding the handheld will never read. Eight short topics; the bottom bar now
+  carries six tabs, which still fits the landscape screen.
+
+**Also fixed:** the one comment in the repository written in Polish, in
+`gradle.properties`, contrary to [D9](decisions.md#d9).
+
+---
+
 ## 2026-07-21 — The release signing key, and M6 closed
 
 Generated straight after the audit: RSA 4096, `CN=Minerva Helper`, alias `minerva`,

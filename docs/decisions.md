@@ -455,3 +455,30 @@ session that outlives the download, a handle left behind would be a seed.
 **Cost:** a fault in the shared session would affect every running download rather
 than one. The limit is capped at four for that reason, and because past three the
 device spends more time finding peers than fetching files.
+
+---
+
+<a id="d24"></a>
+## D24 — The app's name in the system is anchored to GitHub, not to a domain
+
+**2026-07-21.** Android identifies every app by a name like `com.example.thing`. The
+convention is to reverse a domain you own, so that nobody else can pick the same one by
+accident. This app used `com.pawelwywiol.minervahelper` — but `pawelwywiol.com` is not a
+domain we own, so the claim was borrowed rather than real.
+
+Nothing verifies these names: Android does not check, and neither does Google Play.
+What is enforced is that the name is unique and permanent — whoever publishes it first
+keeps it, and an installed app can never change it, because Android treats a different
+name as a different app entirely.
+
+**Changed to `io.github.pawelwywiol.minervahelper`**, the recognised form for developers
+without a domain. A GitHub account genuinely is ours, which makes the claim true instead
+of merely unchallenged.
+
+**Why now:** this was the last moment it was free. Nothing had been published, the
+version was still 0.1.0, and the signing key was a day old. After publication the name
+is permanent — changing it would strand every existing install, since Android refuses to
+update an app whose identity changed.
+
+**Cost:** anyone who had the old debug build keeps it as a separate app; it has to be
+uninstalled by hand. On a project with one user, that is a one-minute cost paid once.

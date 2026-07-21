@@ -14,11 +14,11 @@ rootProject.file("keystore.properties").takeIf { it.isFile }?.inputStream()?.use
 }
 
 android {
-    namespace = "com.pawelwywiol.minervahelper"
+    namespace = "io.github.pawelwywiol.minervahelper"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.pawelwywiol.minervahelper"
+        applicationId = "io.github.pawelwywiol.minervahelper"
         minSdk = 26
         targetSdk = 35
         versionCode = 1

@@ -96,6 +96,8 @@ a downloaded ROM as a program anyway. The limitation is spelled out in
 | R45 | Browse steps one level up rather than jumping to the top | ✅ | M8 |
 | R46 | List rows show the system, an icon for the machine and its maker's colour | ✅ | M8 |
 | R47 | **Adjustable text size** | ✅ | M8 |
+| R48 | A short guide inside the app, as its own tab | ✅ | M9 |
+| R49 | Public repository: README with screenshots, and an open-source licence | ✅ | M9 |
 
 **R36–R40 — added 2026-07-20** after the owner reviewed the working app. The full
 audit and the plan behind them: [design.md](design.md). R40 in one sentence: the user
@@ -169,6 +171,7 @@ Not in the original brief; they emerged from reality or from later clarification
 | R18 | Fallback folder for unmapped platforms | See above |
 | R35 | Live download / queue / storage statistics | Added 2026-07-20 |
 | R42–R47 | Parallel downloads, queue priority, per-item pause, level-up navigation, system icons, text size | Owner's use of the app on the device, 2026-07-21 |
+| R48–R49 | In-app help tab, public repository with README and licence | Preparing the project for publication, 2026-07-21 |
 | R36–R40 | Automatic queue, downloaded markers, folder-move prompt, finished-product look | Owner's review of the working app, 2026-07-20 — see [design.md](design.md) |
 | R41 | Game info + cover art, keyless and cached ([D21](decisions.md#d21)) | Owner's request 2026-07-20; research in [metadata.md](metadata.md) |
 

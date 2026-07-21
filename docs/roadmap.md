@@ -21,6 +21,7 @@ Status key: ✅ done · 🔨 in progress · ⬜ planned — the same key
 | **M6** | Hardening and release | ✅ **done** — signing key generated 2026-07-21; owner must back it up |
 | **M7** | **User experience overhaul** — navigation, automatic queue, visual identity | ✅ **done** — owner's device-in-hand acceptance pending |
 | **M8** | **Queue control and readability** — parallel downloads, priority, per-item pause, text size | ✅ **done** — owner's device-in-hand acceptance pending |
+| **M9** | **Going public** — repository identity, README, licence, in-app help | ✅ **done** |
 
 ---
 
@@ -216,6 +217,25 @@ tested on the RG477V; measurements are in [progress.md](progress.md).
 **Done when:** the owner can say which game downloads first, stop one without
 stopping the others, and read the screen at arm's length. Tested with the device in
 hand.
+
+## ✅ M9 — Going public
+
+Added 2026-07-21, preparing the project to live at
+<https://github.com/PawelWywiol/minervahelper>.
+
+- [x] **The app's identity changed** from `com.pawelwywiol.minervahelper` to
+      `io.github.pawelwywiol.minervahelper`. The old name borrowed a domain nobody owns;
+      the new one is anchored to a GitHub account that is genuinely ours
+      ([D24](decisions.md#d24)). Done before publication on purpose — after it, the
+      identity is permanent
+- [x] **A README for people who have never seen the project**, with six screenshots
+      taken on the RG477V, what the app is for, how to build it and how to use it
+- [x] **MIT licence** — permissive, and it disclaims warranty and liability
+- [x] **A Help tab inside the app** (R48), so the guide is where the user is rather
+      than in a repository they will never open
+- [x] Fixed a raw NUL byte embedded in `DownloadQueue.kt`, which made the file read as
+      binary to `grep`, `sed` and `diff` — it is now the escape `\u0000`, which the
+      compiler treats identically
 
 ---
 
