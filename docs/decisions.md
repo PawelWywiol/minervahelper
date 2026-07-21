@@ -407,11 +407,11 @@ low-resolution images last touched in 2015. None comes close to covering this
 archive's 1,591 platforms. A machine's outline plus the vendor's colour is
 recognisable without borrowing anyone's mark, and costs about five kilobytes.
 
-**Two colours deliberately are not the brand value.** Sega's #117BBD sits close enough
+**Two colours deliberately are not the brand value.** Sega's `#117BBD` sits close enough
 to PlayStation blue to be confusable in a mixed list, so it moves to the cyan its
-Dreamcast era owns anyway; Atari's #D21404 is a second red beside Nintendo's, so it
-moves to the orange of the woodgrain 2600. Nintendo's #E60012 and Microsoft's #107C10
-are used, but lightened — at their published values they sink into the #14161A
+Dreamcast era owns anyway; Atari's `#D21404` is a second red beside Nintendo's, so it
+moves to the orange of the woodgrain 2600. Nintendo's `#E60012` and Microsoft's
+`#107C10` are used, but lightened — at their published values they sink into the `#14161A`
 background. Fidelity to a swatch nobody sees side by side is worth less than telling
 the families apart.
 

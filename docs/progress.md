@@ -7,6 +7,74 @@ unresolved. Claims without measurements do not belong here.
 
 ---
 
+## 2026-07-21 — A documentation audit, and the notification bug it found
+
+The owner asked what was left to do and whether the documentation still matched the
+app. Both were checked: every requirement was traced into the code, and every document
+was read against what is actually there.
+
+**The audit found a real bug, not just stale prose.** Download notifications had no
+channel of their own. `Notifications.progress()` posted them through `catalog_sync`
+with the title "Minerva catalog", so a download announced itself as a catalogue
+update — and because Android lets the user mute a channel, muting catalogue-sync
+notifications silently muted download progress too. A constant `ID_DOWNLOAD` existed;
+a matching channel never did. Downloads now get `CHANNEL_DOWNLOAD` and their own
+title, and `progress()` is split into `syncProgress()` and `downloadProgress()` so the
+two cannot drift back together. Debug build compiles clean. **Not yet seen on the
+device** — R24 stays open until it is.
+
+**What the documentation had wrong:**
+
+- `roadmap.md` called M7 `⬜ … (next)` in its section heading while its own overview
+  table, README and requirements all said done, and all four of its items were ticked
+- `architecture.md` still listed Downloading and File placement as *(planned)* — both
+  shipped in M3 and M4 — and never mentioned `data/queue/`, `data/settings/`,
+  `data/metadata/` or the single shared torrent session from [D23](decisions.md#d23)
+- `design.md` described the pre-M7 app in the present tense, with no marker saying so;
+  a reader would think the app still had no back button and a purple template theme
+- `README.md`'s status stopped at M7 and never mentioned M8
+- `requirements.md` and `roadmap.md` both said "Last updated: 2026-07-20" while
+  carrying 07-21 content, used two different glyphs (🔨 vs 🟡) for the same "partly
+  done" state, listed R33 twice, and left R41's stage column blank
+- Four of the five "Open questions" were tied to milestones that had since closed, and
+  had in fact been answered — the answers were in the code, not in the document
+
+All fixed. Two things were written down that no document had recorded at all: **there
+are no automated tests** (every "done" here means somebody ran it on the handheld —
+noted in `architecture.md` as the deliberate trade it is, with its cost stated), and
+**the test signing key is still in the working copy**, where any release build will
+quietly use it.
+
+**Still open after the audit:** R4 result filtering (never started — worth deciding
+whether it earns its place), R24's device check, and the owner's device-in-hand
+acceptance of M7 and M8.
+
+---
+
+## 2026-07-21 — The release signing key, and M6 closed
+
+Generated straight after the audit: RSA 4096, `CN=Minerva Helper`, alias `minerva`,
+valid until 2056, with a randomly generated 32-character password. Stronger than the
+2026-07-20 test key it replaces (RSA 2048, throwaway password); that key was not
+deleted but archived alongside as `minerva-release.jks.bak`, since discarding a
+signing key is not an undoable act.
+
+**Verified rather than assumed.** A release APK was built (37 s, 31.6 MB) and its
+signature read back with `apksigner`: `CN=Minerva Helper`, certificate SHA-256
+`ffcf942b6bf0ecf30e4c49f08d4dfc1224340b2824b1bc371b93cff367f71876` — byte-for-byte
+the fingerprint `keytool` reports for the key in the keystore. The build genuinely
+signs with the intended key.
+
+**Two things the owner has to know.** The keystore and its password now exist in
+exactly one place, this working copy, and both are git-ignored: they must be copied
+somewhere safe, or every future version of this app becomes unpublishable. And any
+release build already on the device is signed with the old test key — Android will
+refuse to update it, so it has to be uninstalled first.
+
+With that, **M6 is closed and the app is releasable.**
+
+---
+
 ## 2026-07-21 — Icons that name the system, and icons for everything else
 
 The first pass at row icons drew what the software came on — cartridge, disc, floppy,

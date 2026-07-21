@@ -63,7 +63,7 @@ class CatalogSyncWorker(
         setForeground(
             ForegroundInfo(
                 Notifications.ID_SYNC,
-                Notifications.progress(applicationContext, label, percent),
+                Notifications.syncProgress(applicationContext, label, percent),
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC,
             )
         )

@@ -6,7 +6,7 @@ Status key:
 **✅ done** (works and tested on the device) ·
 **🔨 in progress** · **⬜ planned**
 
-Last updated: 2026-07-20
+Last updated: 2026-07-21
 
 ---
 
@@ -89,7 +89,7 @@ a downloaded ROM as a program anyway. The limitation is spelled out in
 | R38 | A file already in the destination (same name and size) counts as downloaded | ✅ | M7 |
 | R39 | Changing a folder asks whether to move already-downloaded files | ✅ | M7 |
 | R40 | **Finished-product look: navigation, visual identity, affordances, guidance** | ✅ | M7 |
-| R41 | Game title, system and cover art on the detail screen | ✅ | — |
+| R41 | Game title, system and cover art on the detail screen | ✅ | M7 |
 | R42 | **Several downloads at once, how many set by the user** | ✅ | M8 |
 | R43 | The queue can be reordered; higher up is downloaded first | ✅ | M8 |
 | R44 | Pause and resume a single item without stopping the others | ✅ | M8 |
@@ -109,6 +109,13 @@ And the system on-screen keyboard ignores the d-pad entirely, so a pad user coul
 never type into Search — the Search screen now has its own small keyboard
 ([D20](decisions.md#d20)), typed on the device with pad keys alone. A final
 device-in-hand sweep by the owner is still welcome.
+
+**R24 — why it is still open:** the progress bar and the ongoing notification work,
+but until 2026-07-21 downloads had no notification channel of their own. They were
+announced through the *catalogue sync* channel and titled "Minerva catalog", so a
+download said it was a catalogue update, and anyone muting sync notifications
+silenced their downloads too. Downloads now have their own channel and title. The
+code is in; what R24 still waits on is seeing it on the device.
 
 **R35 — what must be visible:** the user should never have to guess what the app is
 doing, or find out too late that it will not fit. At minimum:
@@ -158,7 +165,6 @@ Not in the original brief; they emerged from reality or from later clarification
 
 | ID | Requirement | Reason |
 |---|---|---|
-| R33 | ~~The app must ship its own torrent tracker list~~ | Dropped 2026-07-20 — see below |
 | R34 | Re-import the catalogue when the archive is updated | The archive changes; fully tested 2026-07-20 — banner pressed, 1.76 GB index re-downloaded, catalogue rebuilt, favourites intact |
 | R18 | Fallback folder for unmapped platforms | See above |
 | R35 | Live download / queue / storage statistics | Added 2026-07-20 |

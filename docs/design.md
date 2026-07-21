@@ -5,16 +5,25 @@ the app must be intuitive, legible and pleasant for people of any age and experi
 fully usable by touch **and** by gamepad, and it should look like a finished product —
 not a prototype.
 
-This page records what is wrong today, what "good" looks like on this device, and the
-plan to get there. The work is tracked as stage **M7** in [roadmap.md](roadmap.md).
+This page records what was wrong, what "good" looks like on this device, and the plan
+to get there. The work was tracked as stage **M7** in [roadmap.md](roadmap.md).
+
+> **This page is history, not a to-do list.** Everything the audit below complains
+> about was fixed in M7 and tested on the device on 2026-07-20 — there is no back
+> button missing, no purple template theme, no delete-on-tap in the queue. It is kept
+> because the reasoning still explains why the app looks and behaves the way it does.
+> For what the app is like now, see [roadmap.md](roadmap.md) and
+> [progress.md](progress.md).
+>
+> Last updated: 2026-07-21 (marked as historical; content unchanged since 2026-07-20)
 
 ---
 
-## What the app looks like today (audit)
+## What the app looked like before M7 (audit)
 
-Based on screenshots taken on the device and a review of every screen. The app is
-functionally solid — everything below is about how it presents itself and how it
-behaves towards the person using it.
+Based on screenshots taken on the device and a review of every screen. The app was
+functionally solid — everything below is about how it presented itself and how it
+behaved towards the person using it.
 
 ### Navigation
 
@@ -60,10 +69,11 @@ behaves towards the person using it.
 
 ---
 
-## The plan
+## The plan — all four packages shipped in M7
 
-Four packages, each ending with a test on the device. Visual identity comes after
-structure — a coat of paint on the current navigation would be wasted work.
+Four packages, each ending with a test on the device. Visual identity came after
+structure — a coat of paint on the old navigation would have been wasted work.
+All four were delivered and tested on 2026-07-20; see [roadmap.md](roadmap.md#-m7--user-experience-overhaul).
 
 ### 1. Structure — navigation people expect
 

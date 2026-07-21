@@ -3,7 +3,10 @@
 Work is split into stages. Each stage ends with a **test on the connected device** —
 a successful build does not count as done.
 
-Last updated: 2026-07-20
+Last updated: 2026-07-21
+
+Status key: ✅ done · 🔨 in progress · ⬜ planned — the same key
+[requirements.md](requirements.md) uses.
 
 ## Overview
 
@@ -15,7 +18,7 @@ Last updated: 2026-07-20
 | **M3** | Download queue and engine | ✅ **done** |
 | **M4** | File placement, verification, platform mapping | ✅ **done** |
 | **M5** | Onboarding, settings, battery | ✅ **done** |
-| **M6** | Hardening and release | 🟡 |
+| **M6** | Hardening and release | ✅ **done** — signing key generated 2026-07-21; owner must back it up |
 | **M7** | **User experience overhaul** — navigation, automatic queue, visual identity | ✅ **done** — owner's device-in-hand acceptance pending |
 | **M8** | **Queue control and readability** — parallel downloads, priority, per-item pause, text size | ✅ **done** — owner's device-in-hand acceptance pending |
 
@@ -131,7 +134,7 @@ emulator frontend; a corrupted file is rejected with a retry offered.
 **Done when:** a fresh install leads to playing a downloaded game in one sitting,
 entirely on the device.
 
-## 🟡 M6 — Hardening and release
+## ✅ M6 — Hardening and release
 
 - [x] Clear error messages, with a way back (retry)
 - [x] Free-space check before a torrent starts
@@ -140,18 +143,27 @@ entirely on the device.
       27 MB torrent file
 - [x] Network loss during download — tested; it pauses and resumes by itself
 - [x] Release build with code shrinking — tested on device, torrent path intact
-- [ ] Real signing key — the signing plumbing is done and was proven with a test key
-      2026-07-20 (signed release built, installed and ran); what remains is one
-      `keytool` command the owner runs, then backing up `keystore/` and
-      `keystore.properties` **outside the repository** — both are git-ignored on
-      purpose: they hold the key and its passwords, and a leaked key lets anyone
-      publish updates that look like ours
+- [x] Real signing key — generated 2026-07-21: RSA 4096, `CN=Minerva Helper`, alias
+      `minerva`, valid to 2056, random 32-character password. A release APK was built
+      and its signature checked: certificate fingerprint `FF:CF:94:2B:…:18:76`, the
+      same key. The 2026-07-20 test key is archived beside it as
+      `minerva-release.jks.bak`.
+      **What the owner still must do:** copy `keystore/minerva-release.jks` and
+      `keystore.properties` somewhere safe **outside this folder** — a password
+      manager or an encrypted backup. Both are git-ignored on purpose. Lose them and
+      no future build can ever update an installed app; leak them and anyone can
+      publish updates that look like ours.
+      **Also:** a release signed with the old test key cannot be updated by one signed
+      with this key. Any such build on the device must be uninstalled first
+- [x] Download progress has its own notification channel — until 2026-07-21 it
+      borrowed the catalogue-sync channel, so downloads announced themselves as
+      "Minerva catalog"; muting sync notifications also muted downloads
 - [x] Versioned catalogue re-import (R34) — fully tested on the device 2026-07-20:
       the update banner appeared, the button was pressed, the app downloaded the
       1.76 GB index in ~9 minutes, rebuilt the 521 MB catalogue (2,428,272 files),
       recorded the archive's version, and the banner went away; favourites survived
 
-## ⬜ M7 — User experience overhaul (next)
+## ✅ M7 — User experience overhaul
 
 Added 2026-07-20 after the owner reviewed the working app: it works, but it looks and
 behaves like a prototype. Full audit and rationale in [design.md](design.md).
@@ -207,14 +219,20 @@ hand.
 
 ---
 
-## Open questions
+## Still open
 
-Blocking nothing right now, but they need answers before the relevant stage:
+| Question | Where it stands |
+|---|---|
+| Fill in the remaining platform mappings (1,006 pairs, 10% of files)? | Open. Adding them based on actual usage, not upfront — the unmapped-platform fallback ([D16](decisions.md#d16)) makes this non-blocking |
+| Enrich ROMs with game info and cover art from external databases? | Partly done. Title, system and cover ship on the detail pane ([D21](decisions.md#d21)); descriptions need an API key and the offline name database is unbuilt — both in [metadata.md](metadata.md) |
+| Filter search results by type and size (R4)? | Open, never started. Decide whether it earns its place or joins the dropped requirements |
+| Light theme alongside dark? | Deferred. Dark-first shipped ([D17](decisions.md#d17)); light comes only if someone asks |
 
-| Question | Recommendation | Needed by |
-|---|---|---|
-| Fill in the remaining platform mappings (1,006 pairs, 10% of files)? | Add them based on actual usage, not upfront | M4 |
-| Enrich ROMs with game info and cover art from external databases? | First slice shipped 2026-07-20 — title, system and cover on the detail pane ([D21](decisions.md#d21)); descriptions and the offline name database remain in [metadata.md](metadata.md) | future |
-| Where do finished downloads go — vanish, or a "Downloaded" history? | History: keeps the record R37/R38 need anyway, and users can check what they have | M7 |
-| Dark theme only, or light and dark? | Dark-first (matches the device); add light later only if asked | M7 |
-| "Already downloaded" check: name+size, or full checksum? | Name+size, as specified — checksums of a whole library would take minutes | M7 |
+## Questions that have been answered
+
+Kept for the record, because the reasoning still explains why the app behaves as it does:
+
+| Question | Answer |
+|---|---|
+| Where do finished downloads go — vanish, or a "Downloaded" history? | History. It keeps the record R37/R38 need anyway, and users can check what they have (M7) |
+| "Already downloaded" check: name+size, or full checksum? | Name+size. Checksumming a whole library would take minutes (M7) |

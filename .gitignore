@@ -9,7 +9,8 @@ captures/
 .cxx/
 *.apk
 *.aab
-keystore.properties
+keystore.properties*
 keystore/
 *.jks
+*.jks.bak
 *.keystore

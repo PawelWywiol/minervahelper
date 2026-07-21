@@ -1,7 +1,9 @@
 <resources>
     <string name="app_name">Minerva Helper</string>
     <string name="channel_catalog_sync">Catalog sync</string>
+    <string name="channel_downloads">Downloads</string>
     <string name="sync_title">Minerva catalog</string>
+    <string name="download_title">Downloading games</string>
     <string name="sync_downloading">Downloading catalog</string>
     <string name="sync_importing">Importing catalog</string>
     <string name="sync_ready">Catalog ready</string>

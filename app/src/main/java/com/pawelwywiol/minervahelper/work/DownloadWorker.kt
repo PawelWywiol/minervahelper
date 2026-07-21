@@ -252,7 +252,7 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
     private suspend fun report(label: String, percent: Int) = setForeground(
         ForegroundInfo(
             Notifications.ID_DOWNLOAD,
-            Notifications.progress(applicationContext, label, percent),
+            Notifications.downloadProgress(applicationContext, label, percent),
             ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC,
         )
     )

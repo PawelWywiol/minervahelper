@@ -3,6 +3,8 @@
 Written for non-programmers, avoiding jargon where possible. Terms are explained in
 the [glossary](glossary.md).
 
+Last updated: 2026-07-21
+
 ## The flow: from a search to a finished file
 
 ```mermaid
@@ -44,10 +46,17 @@ Conversion takes **80 seconds** on the device.
 | Part | Responsible for |
 |---|---|
 | **Catalogue** (`data/catalog/`) | Fetching the archive database, converting it, searching |
-| **Downloading** (planned) | Queue, torrent engine, pause and resume |
-| **File placement** (planned) | Verification and moving into the user's folder |
+| **Queue** (`data/queue/`) | What is waiting, in what order, what is paused, what is finished |
+| **Downloading** (`data/download/`) | The torrent engine and pulling out only the chosen files |
+| **File placement** (`data/placement/`) | Verification, platform → folder mapping, moving into the user's folder |
+| **Settings** (`data/settings/`) | The user's choices — text size, how many downloads at once, first-run state |
+| **Game info** (`data/metadata/`) | Canonical titles and cover art, fetched without an API key ([D21](decisions.md#d21)) |
 | **Interface** (`ui/`) | Screens, gamepad handling |
 | **Background work** (`work/`) | Running while the app is closed, notifications |
+| **Spikes** (`spike/`) | Throwaway screens that proved the risky parts in M0; debug builds only |
+
+One torrent engine serves the whole app, not one per download — several downloads at
+once share a single session, each with its own staging folder. [Rationale](decisions.md#d23).
 
 ## Technologies and why
 
@@ -73,3 +82,19 @@ corrupted mid-write. [Rationale](decisions.md#d4).
 stopped. Importantly, this is done by stopping it and **not** by throttling upload
 speed to zero — that would cripple downloading too. Diagnosing this cost us two
 hours.
+
+**There are no automated tests.** Every "done" in this documentation means somebody
+ran the app on the real handheld and watched it work; the numbers in
+[progress.md](progress.md) are measurements from that device. This was a deliberate
+trade for a one-person project whose riskiest parts — a torrent swarm, a 2.4-million-row
+database, a specific handheld's gamepad — are exactly the parts a test on a build
+machine cannot honestly reproduce. The cost is real: nothing catches a regression
+except the next person to pick the device up. If this project ever grows a second
+developer, that trade should be revisited.
+
+## One name to know
+
+The bottom menu's **Settings** tab opens `ui/settings/FoldersScreen.kt`. The file
+began life as the folder mapping screen and kept the name while it grew text size and
+parallel-download settings, so what the user calls "Settings" is what the code calls
+"Folders".
