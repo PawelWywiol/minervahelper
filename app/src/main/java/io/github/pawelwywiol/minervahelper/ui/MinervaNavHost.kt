@@ -48,6 +48,7 @@ import io.github.pawelwywiol.minervahelper.ui.catalog.SearchScreen
 import io.github.pawelwywiol.minervahelper.ui.onboarding.OnboardingScreen
 import io.github.pawelwywiol.minervahelper.ui.queue.QueueScreen
 import io.github.pawelwywiol.minervahelper.ui.settings.FoldersScreen
+import io.github.pawelwywiol.minervahelper.ui.settings.WebRemoteScreen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -188,9 +189,11 @@ fun MinervaNavHost() {
                 FoldersScreen(
                     destinations,
                     queue,
+                    onWebRemote = { navController.navigate("web") },
                     onDev = if (BuildConfig.DEBUG) ({ navController.navigate("dev") }) else null,
                 )
             }
+            composable("web") { WebRemoteScreen() }
             composable("help") { HelpScreen() }
             composable("favourites") {
                 WithCatalog(catalog, navController::navigate) { reader ->

@@ -1,0 +1,113 @@
+:root {
+  --bg: #101216;
+  --surface: #191c22;
+  --surface-2: #21252d;
+  --line: #2c313b;
+  --text: #e7e9ee;
+  --muted: #9aa2b1;
+  --accent: #7cc4ff;
+  --accent-ink: #06121d;
+  --danger: #ff8a80;
+  --radius: 12px;
+  --gap: 16px;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+main {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: var(--gap);
+}
+
+h1 { font-size: 1.4rem; margin: 0 0 0.25rem; letter-spacing: -0.01em; }
+h2 { font-size: 1rem; margin: 0 0 0.5rem; }
+p { margin: 0 0 0.75rem; }
+.muted { color: var(--muted); font-size: 0.9rem; }
+.error { color: var(--danger); font-size: 0.9rem; min-height: 1.5em; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: calc(var(--gap) * 1.25);
+}
+
+.gate { max-width: 26rem; margin: 10vh auto 0; }
+
+form { display: flex; flex-direction: column; gap: 12px; }
+
+label { font-size: 0.9rem; color: var(--muted); }
+
+input[type="text"] {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  font: inherit;
+  font-size: 1.5rem;
+  letter-spacing: 0.4em;
+  text-align: center;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+input:focus-visible,
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+button {
+  min-height: 44px;
+  padding: 0 18px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--accent-ink);
+  background: var(--accent);
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+button:disabled { opacity: 0.5; cursor: default; }
+
+button.ghost {
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--line);
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.facts li {
+  background: var(--surface-2);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.facts dt, .facts .k { color: var(--muted); font-size: 0.8rem; }
+.facts .v { font-size: 1.2rem; font-variant-numeric: tabular-nums; }
+
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+
+.warn {
+  border-left: 3px solid var(--danger);
+  padding-left: 12px;
+  color: var(--danger);
+  font-size: 0.9rem;
+}

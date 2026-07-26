@@ -7,4 +7,8 @@
     <string name="sync_downloading">Downloading catalog</string>
     <string name="sync_importing">Importing catalog</string>
     <string name="sync_ready">Catalog ready</string>
+    <string name="channel_web_remote">Browser remote</string>
+    <string name="web_title">Browser remote is on</string>
+    <string name="web_starting">Starting…</string>
+    <string name="web_stop">Turn off</string>
 </resources>

@@ -11,6 +11,8 @@ okhttp = "4.12.0"
 documentfile = "1.1.0"
 libtorrent4j = "2.1.0-39"
 reorderable = "3.1.0"
+ktor = "3.5.1"
+desugarNio = "2.1.5"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -38,6 +40,15 @@ reorderable = { group = "sh.calvin.reorderable", name = "reorderable", version.r
 
 libtorrent4j = { group = "org.libtorrent4j", name = "libtorrent4j", version.ref = "libtorrent4j" }
 libtorrent4j-android-arm64 = { group = "org.libtorrent4j", name = "libtorrent4j-android-arm64", version.ref = "libtorrent4j" }
+
+# The browser remote is served by the app itself; CIO is the coroutine-based engine, the only one
+# built for a device rather than a datacentre.
+ktor-server-core = { group = "io.ktor", name = "ktor-server-core", version.ref = "ktor" }
+ktor-server-cio = { group = "io.ktor", name = "ktor-server-cio", version.ref = "ktor" }
+
+# Ktor's artifact transform fails on Android without it, even at minSdk 26 — the NIO variant is the
+# one that carries java.nio, which CIO is built on.
+desugar-jdk-libs-nio = { group = "com.android.tools", name = "desugar_jdk_libs_nio", version.ref = "desugarNio" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
