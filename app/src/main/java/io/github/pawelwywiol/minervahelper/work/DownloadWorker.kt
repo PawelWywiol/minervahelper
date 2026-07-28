@@ -16,6 +16,7 @@ import io.github.pawelwywiol.minervahelper.data.download.SelectiveDownloader
 import io.github.pawelwywiol.minervahelper.data.download.TorrentCache
 import io.github.pawelwywiol.minervahelper.data.download.loadTorrentInfo
 import io.github.pawelwywiol.minervahelper.data.download.md5
+import io.github.pawelwywiol.minervahelper.data.catalog.CatalogReader
 import io.github.pawelwywiol.minervahelper.data.queue.DownloadQueue
 import io.github.pawelwywiol.minervahelper.data.queue.DownloadState
 import io.github.pawelwywiol.minervahelper.data.placement.Destinations
@@ -281,6 +282,42 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
         fun isActiveFlow(context: Context): Flow<Boolean> =
             WorkManager.getInstance(context).getWorkInfosForUniqueWorkFlow(NAME)
                 .map { infos -> infos.any { !it.state.isFinished } }
+
+        /** The same answer, for callers outside Compose. Blocking; a local query, not a network one. */
+        fun isActive(context: Context): Boolean =
+            WorkManager.getInstance(context).getWorkInfosForUniqueWork(NAME).get()
+                .any { !it.state.isFinished }
+
+        /**
+         * Queueing is more than an insert: a file already sitting in the destination counts as
+         * downloaded instead of being fetched again (R38), and anything genuinely queued starts
+         * downloading on its own (R36) — unless the user explicitly asks for a re-download of
+         * something they already have.
+         *
+         * Lives here rather than in a screen because the browser remote queues ROMs too, and a
+         * second copy of this rule would be a second chance to get it wrong. Blocking: it touches
+         * the queue database and the destination tree.
+         */
+        fun toggleDownload(context: Context, rom: CatalogReader.Rom): Boolean {
+            val queue = DownloadQueue.get(context)
+            val destinations = Destinations.get(context)
+            val added = when {
+                queue.contains(rom) -> { queue.toggle(rom); false }
+                queue.isDownloaded(rom) -> queue.toggle(rom)
+                else -> {
+                    val root = destinations.root
+                    val folder = destinations.folderFor(rom.collection, rom.platformKey)
+                    if (root != null && FilePlacement(context).exists(root, folder, rom.name, rom.size)) {
+                        queue.recordDownloaded(rom, folder)
+                        false
+                    } else {
+                        queue.toggle(rom)
+                    }
+                }
+            }
+            if (added) enqueue(context)
+            return added
+        }
     }
 }
 

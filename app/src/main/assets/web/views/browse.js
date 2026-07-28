@@ -1,5 +1,5 @@
 import * as api from '../api.js';
-import { count, el, marker, row, size, spinner } from '../dom.js';
+import { count, el, romRow, row, size, spinner } from '../dom.js';
 
 /**
  * Collections → platforms → ROMs, the same three levels as the app.
@@ -10,7 +10,7 @@ import { count, el, marker, row, size, spinner } from '../dom.js';
  */
 const MAX_ROWS = 1000;
 
-export function browse(mount, { onError }) {
+export function browse(mount, { onError, onDetails }) {
   const render = (nodes) => mount.replaceChildren(...nodes);
 
   const crumbs = (...parts) =>
@@ -68,15 +68,27 @@ export function browse(mount, { onError }) {
     const status = el('p', { className: 'muted' }, 'Loading…');
     const moreButton = el('button', { type: 'button', className: 'ghost wide' }, 'Load more');
 
-    // Plain rows, not buttons: nothing can be queued from the browser until W3 wires the queue up,
-    // and a row that looks pressable but is not is worse than one that does not offer.
+    // Returning from a detail pane re-mounts the very same nodes, so the page reached by loading
+    // more, and the scroll position with it, is still there.
+    const show = () => render([
+      crumbs(
+        { label: 'Browse', onClick: showCollections },
+        { label: collection, onClick: () => showPlatforms(collection) },
+        { label: platform.label },
+      ),
+      el('h1', {}, platform.label),
+      status,
+      list,
+      moreButton,
+    ]);
+
     const paint = () => {
       list.replaceChildren(...rows.map((rom) =>
-        el('div', { className: 'row static' }, [
-          el('span', { className: 'name' }, rom.name),
-          el('span', { className: 'meta' }, size(rom.size)),
-          marker(rom),
-        ])));
+        romRow(rom, size(rom.size), {
+          queue: api.toggleQueue,
+          details: (it) => onDetails(it, show),
+          onError: (error) => onError(error, () => showRoms(collection, platform)),
+        })));
       status.textContent = `${count(rows.length)} of ${count(platform.fileCount)} shown`;
       moreButton.hidden = !more;
     };
@@ -101,17 +113,7 @@ export function browse(mount, { onError }) {
     }
 
     moreButton.addEventListener('click', loadMore);
-    render([
-      crumbs(
-        { label: 'Browse', onClick: showCollections },
-        { label: collection, onClick: () => showPlatforms(collection) },
-        { label: platform.label },
-      ),
-      el('h1', {}, platform.label),
-      status,
-      list,
-      moreButton,
-    ]);
+    show();
     await loadMore();
   }
 

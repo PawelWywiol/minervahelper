@@ -99,12 +99,44 @@ remember how something works.
 
 ---
 
+## Using it from a browser
+
+Picking twenty games out of 2.4 million on a 4.7" screen with a D-pad is slow. The app
+can serve its own control page to any browser on the same Wi-Fi, so the picking happens
+on a real keyboard and the downloading still happens on the handheld.
+
+1. **Settings → Browser remote → Turn on.** The screen shows an address such as
+   `http://192.168.0.33:8080`.
+2. Open that address in a browser on the same network.
+3. Press **Show pairing code** on the device and type the six digits into the browser.
+   One browser, one code: the code is single-use, expires after two minutes, and five
+   wrong guesses lock pairing for five minutes.
+4. From then on that browser stays paired until you unpair it on the device.
+
+The browser gives you the same archive and the same queue as the app: browse, search,
+game details with cover art, favourites, queueing and reordering, pausing, retrying, and
+the per-platform folder settings.
+
+Worth knowing:
+
+- **The server is off until you turn it on**, never starts by itself, stops when Wi-Fi
+  goes away, and shows a notification the whole time it runs.
+- **It listens on your Wi-Fi address only** — never on mobile data.
+- **The address is your device's IP, and cookies belong to an address.** If your router
+  hands out a different one, every browser has to pair again. A static DHCP reservation
+  for the handheld in your router avoids that for good.
+- **Nothing you downloaded can be fetched through it.** The page is a remote control;
+  there is no address that returns the contents of a file on the device.
+
+---
+
 ## This app never shares your files
 
 Ordinary torrent clients upload to other people while and after they download. This one
 does not, and cannot: as soon as a download finishes its torrent is stopped, and no
 file content is ever sent out. This is a structural property of the app, not a setting
-you can flip.
+you can flip. The browser remote does not weaken it: it can start and stop downloads,
+but no route in it returns file content.
 
 ## What you download is your responsibility
 

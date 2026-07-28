@@ -43,6 +43,11 @@ One consequence of that choice: the app **must be fully operable with the gamepa
 alone (D-pad and buttons). Touchscreens on these devices are small and awkward, and
 some users do not use them at all.
 
+That constraint is also why the app can be driven from a browser on the same Wi-Fi:
+picking twenty games out of 2.4 million is quick with a keyboard and slow with a D-pad.
+The browser is a remote control only — the downloading, checking and filing still happen
+on the handheld, and nothing downloaded can be pulled off it through that page.
+
 ## Project goals
 
 1. **Save bandwidth** — download only the selected files. That is the difference

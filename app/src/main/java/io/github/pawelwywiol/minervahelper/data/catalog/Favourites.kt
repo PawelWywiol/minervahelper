@@ -34,8 +34,20 @@ class Favourites(context: Context) {
     private fun keyOf(rom: CatalogReader.Rom) =
         listOf(rom.collection, rom.platformKey, rom.name).joinToString(SEPARATOR)
 
-    private companion object {
-        const val STORE_KEY = "roms"
+    companion object {
+        /**
+         * One instance per process: the list is Compose state, so a second one would keep its own
+         * copy and the screen would stop reflecting what the browser remote just changed.
+         */
+        @Volatile
+        private var instance: Favourites? = null
+
+        fun get(context: Context): Favourites =
+            instance ?: synchronized(this) {
+                instance ?: Favourites(context.applicationContext).also { instance = it }
+            }
+
+        private const val STORE_KEY = "roms"
         /** ROM names contain spaces, slashes and brackets; only a control character is safe. */
         const val SEPARATOR = "\u0000"
     }

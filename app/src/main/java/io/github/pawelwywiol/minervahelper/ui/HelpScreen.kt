@@ -54,6 +54,15 @@ private val TOPICS = listOf(
             "again later. Retry failed puts everything that failed back in the queue.",
     ),
     Topic(
+        "Picking games from a browser",
+        "Settings · Browser remote turns on a page this device serves to any browser on the same " +
+            "Wi-Fi. Open the address it shows, type the six-digit code once, and you can browse, " +
+            "search, queue and reorder from a full keyboard and a big screen.\n\n" +
+            "It is off until you turn it on, and turning it off is one press. The downloading still " +
+            "happens here — the browser is a remote control, never a way to take files off this " +
+            "device.",
+    ),
+    Topic(
         "Making it easier to read",
         "Settings has a text size that everything in the app follows, from a fifth smaller up to " +
             "twice the size.",

@@ -100,7 +100,9 @@ button.wide { width: 100%; margin-top: 12px; }
 
 .brand { font-weight: 700; letter-spacing: -0.01em; }
 
-.tabs { display: flex; gap: 6px; }
+/* Six tabs do not fit across a phone in one line, and a nav that pushes the page sideways takes
+   every list with it — so they wrap instead. */
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; }
 
 button.tab {
   min-height: 40px;
@@ -155,6 +157,63 @@ button.tab.on {
 
 .tag.done { color: var(--done); border: 1px solid color-mix(in oklab, var(--done) 40%, transparent); }
 .tag.queued { color: var(--queued); border: 1px solid color-mix(in oklab, var(--queued) 40%, transparent); }
+
+/* A list row that carries a second action beside the row's own */
+.rowline { display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--line); }
+.rowline .row { flex: 1; min-width: 0; border-bottom: 0; }
+
+/* ROM detail */
+.detail { display: flex; flex-wrap: wrap; gap: var(--gap); align-items: flex-start; }
+.detail > div { flex: 1; min-width: min(100%, 18rem); }
+
+.cover {
+  width: 12rem;
+  max-width: 100%;
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+
+.facts-rows { display: grid; gap: 6px; margin: 12px 0; }
+.fact { display: flex; flex-wrap: wrap; gap: 8px; font-size: 0.9rem; }
+.fact .k { min-width: 6rem; color: var(--muted); }
+.fact .v { overflow-wrap: anywhere; }
+
+/* Settings */
+.editor { display: grid; gap: 8px; padding: 12px 8px; border-bottom: 1px solid var(--line); }
+.checkline { display: flex; align-items: center; gap: 8px; color: var(--text); }
+.checkline input { width: auto; min-height: 0; }
+
+/* Queue */
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.actions:empty { display: none; }
+
+.buttons { display: flex; gap: 6px; }
+
+button.small { min-height: 32px; padding: 0 10px; font-size: 0.85rem; }
+
+.group { margin-top: 18px; }
+
+.group-head {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px;
+  background: var(--surface-2);
+  border-radius: 10px;
+}
+
+.group-head .name { font-weight: 600; overflow-wrap: anywhere; }
+
+.progress { margin: 8px 0 4px; color: var(--accent); font-size: 0.85rem; }
+
+/* Not ".bar" — that is the page header, and a second rule of the same name silently flattened it. */
+.meter { height: 6px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+.meter span { display: block; height: 100%; background: var(--accent); transition: width 0.4s linear; }
+
+.error.small { display: block; font-size: 0.85rem; }
+
+h2 { font-size: 1.05rem; margin: 24px 0 8px; }
 
 /* Breadcrumbs */
 .crumbs {

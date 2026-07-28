@@ -71,7 +71,7 @@ fun MinervaNavHost() {
     val navController = rememberNavController()
     val (catalog, reloadCatalog) = rememberCatalog()
     val context = LocalContext.current
-    val favourites = remember { Favourites(context) }
+    val favourites = remember { Favourites.get(context) }
     val queue = remember { DownloadQueue.get(context) }
     val destinations = remember { Destinations.get(context) }
     val setup = remember { Setup.get(context) }

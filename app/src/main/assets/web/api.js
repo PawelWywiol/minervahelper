@@ -28,6 +28,8 @@ export const send = (path, body) =>
     body: JSON.stringify(body ?? {}),
   });
 
+export const del = (path) => call(path, { method: 'DELETE' });
+
 export const state = () => get('/api/state');
 
 export const collections = () => get('/api/collections');
@@ -42,6 +44,35 @@ export function roms(platformId, cursor) {
 
 export const search = (query, offset = 0) =>
   get(`/api/search?q=${encodeURIComponent(query)}&offset=${offset}`);
+
+export const rom = (id) => get(`/api/roms/${id}`);
+
+export const favourites = () => get('/api/favourites');
+
+export const toggleFavourite = (romId) => send('/api/favourites', { romId });
+
+export const settings = () => get('/api/settings');
+
+export const updateSettings = (change) => send('/api/settings', change);
+
+export const queue = () => get('/api/queue');
+
+/** Answers with the ROM's marks as they now stand, which is what the caller repaints its row from. */
+export const toggleQueue = (romId) => send('/api/queue', { romId });
+
+export const pauseItem = (id, paused) => send('/api/queue/pause', { id, paused });
+
+export const pauseGroup = (torrentPath, paused) => send('/api/queue/pause', { torrentPath, paused });
+
+export const moveGroup = (from, to) => send('/api/queue/move', { from, to });
+
+export const setRunning = (running) => send('/api/queue/run', { running });
+
+export const retryFailed = () => send('/api/queue/retry');
+
+export const removeQueued = (id) => del(`/api/queue/${id}`);
+
+export const forgetDownloaded = (id) => del(`/api/downloaded/${id}`);
 
 /** Resolves false when the code was rejected — the reason is deliberately not disclosed. */
 export async function pair(pin) {

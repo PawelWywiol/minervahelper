@@ -1,11 +1,11 @@
 import * as api from '../api.js';
-import { count, el, marker, size } from '../dom.js';
+import { count, el, romRow, size } from '../dom.js';
 
 /** Long enough that a two-letter prefix does not sweep the whole 2.4M-row index on every keystroke. */
 const DEBOUNCE_MS = 200;
 const PAGE = 50;
 
-export function search(mount, { onError }) {
+export function search(mount, { onError, onDetails }) {
   const input = el('input', {
     type: 'search',
     id: 'q',
@@ -24,11 +24,11 @@ export function search(mount, { onError }) {
 
   const paint = (roms, append) => {
     const nodes = roms.map((rom) =>
-      el('div', { className: 'row static' }, [
-        el('span', { className: 'name' }, rom.name),
-        el('span', { className: 'meta' }, `${size(rom.size)} · ${rom.platformKey}`),
-        marker(rom),
-      ]));
+      romRow(rom, `${size(rom.size)} · ${rom.platformKey}`, {
+        queue: api.toggleQueue,
+        details: (it) => onDetails(it, view.open),
+        onError: (error) => onError(error, () => run(false)),
+      }));
     if (append) list.append(...nodes);
     else list.replaceChildren(...nodes);
   };
@@ -72,7 +72,8 @@ export function search(mount, { onError }) {
     run(true);
   });
 
-  return {
+  // Same nodes every time, so coming back from a detail pane keeps the query and its results.
+  const view = {
     open() {
       mount.replaceChildren(
         el('h1', {}, 'Search'),
@@ -85,4 +86,5 @@ export function search(mount, { onError }) {
       input.focus();
     },
   };
+  return view;
 }

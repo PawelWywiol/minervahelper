@@ -24,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -49,6 +50,7 @@ import kotlinx.coroutines.delay
 fun WebRemoteScreen() {
     val context = LocalContext.current
     val pairing = remember { Pairing.get(context) }
+    var confirming by remember { mutableStateOf<String?>(null) }
 
     // The running server's only outward sign is its notification, and on Android 13 and later that
     // needs a permission this app has never asked for. Asked at the moment it matters; the server
@@ -141,7 +143,18 @@ fun WebRemoteScreen() {
                             modifier = Modifier.weight(1f),
                         )
                         Spacer(Modifier.width(8.dp))
-                        TextButton(onClick = { pairing.revoke(client.id) }) { Text("Unpair") }
+                        // Unpairing removes the row, so the list closes up under the finger and a
+                        // second tap in the same place would hit whoever moved into it. Asking first
+                        // costs one press and makes that impossible.
+                        if (confirming == client.id) {
+                            TextButton(onClick = {
+                                pairing.revoke(client.id)
+                                confirming = null
+                            }) { Text("Unpair for good") }
+                            TextButton(onClick = { confirming = null }) { Text("Keep") }
+                        } else {
+                            TextButton(onClick = { confirming = client.id }) { Text("Unpair") }
+                        }
                     }
                 }
             }

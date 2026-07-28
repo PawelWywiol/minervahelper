@@ -1,7 +1,11 @@
 import * as api from './api.js';
 import { count, el } from './dom.js';
 import { browse } from './views/browse.js';
+import { detail } from './views/detail.js';
+import { favourites } from './views/favourites.js';
+import { queue } from './views/queue.js';
 import { search } from './views/search.js';
+import { settings } from './views/settings.js';
 
 const app = document.getElementById('app');
 
@@ -99,10 +103,18 @@ function shell(status) {
     );
   };
 
+  // Detail is not a tab: it belongs to whichever list opened it, and hands control straight back
+  // there so the list keeps the page and the scroll the user had reached.
+  const pane = detail(mount, { onError });
+  const onDetails = (rom, back) => pane.open(rom, back);
+
   const views = {
     overview: { label: 'Overview', open: () => overview(mount, status) },
-    browse: { label: 'Browse', ...browse(mount, { onError }) },
-    search: { label: 'Search', ...search(mount, { onError }) },
+    browse: { label: 'Browse', ...browse(mount, { onError, onDetails }) },
+    search: { label: 'Search', ...search(mount, { onError, onDetails }) },
+    favourites: { label: 'Favourites', ...favourites(mount, { onError, onDetails }) },
+    queue: { label: 'Queue', ...queue(mount, { onError }) },
+    settings: { label: 'Settings', ...settings(mount, { onError }) },
   };
 
   const tabs = el('nav', { className: 'tabs', ariaLabel: 'Sections' });
@@ -118,9 +130,14 @@ function shell(status) {
     }));
   };
 
+  // A view that polls must be told it is no longer on screen, or a tab left on Browse keeps the
+  // device answering the queue every second.
+  let current = null;
   const show = () => {
     const key = location.hash.replace('#', '') || 'overview';
     const view = views[key] || views.overview;
+    current?.close?.();
+    current = view;
     paintTabs(views[key] ? key : 'overview');
     view.open();
   };

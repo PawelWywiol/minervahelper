@@ -35,5 +35,31 @@ export const spinner = (label = 'Loading…') => el('p', { className: 'muted' },
 export function marker(rom) {
   if (rom.downloaded) return el('span', { className: 'tag done', title: 'Already downloaded' }, 'on device');
   if (rom.queued) return el('span', { className: 'tag queued', title: 'Waiting in the queue' }, 'queued');
-  return null;
+  return el('span', { className: 'tag' }, '');
+}
+
+/**
+ * A ROM row that queues on press. The row repaints from what the device answers, not from what we
+ * assumed would happen: a file already sitting in the destination comes back as downloaded rather
+ * than queued, and the marker has to say so.
+ */
+export function romRow(rom, meta, { queue, details, onError }) {
+  let tag = marker(rom);
+  const node = row(async () => {
+    node.disabled = true;
+    try {
+      const next = marker({ ...rom, ...(await queue(rom.id)) });
+      tag.replaceWith(next);
+      tag = next;
+    } catch (error) {
+      onError(error);
+    } finally {
+      node.disabled = false;
+    }
+  }, [el('span', { className: 'name' }, rom.name), el('span', { className: 'meta' }, meta), tag]);
+  node.title = 'Press to queue or unqueue on the device';
+
+  const more = el('button', { type: 'button', className: 'ghost small', title: `Details of ${rom.name}` }, 'Details');
+  more.addEventListener('click', () => details(rom));
+  return el('div', { className: 'rowline' }, [node, more]);
 }
