@@ -3,6 +3,8 @@ package io.github.pawelwywiol.minervahelper.data.web
 import android.content.Context
 import android.util.Log
 import io.github.pawelwywiol.minervahelper.BuildConfig
+import io.github.pawelwywiol.minervahelper.data.catalog.CatalogReader
+import io.github.pawelwywiol.minervahelper.data.catalog.Systems
 import io.github.pawelwywiol.minervahelper.data.placement.Destinations
 import io.github.pawelwywiol.minervahelper.data.queue.DownloadQueue
 import io.github.pawelwywiol.minervahelper.data.settings.Preferences
@@ -42,6 +44,7 @@ class WebServer(private val context: Context, private val pairing: Pairing) {
     private val queue by lazy { DownloadQueue.get(context) }
     private val destinations by lazy { Destinations.get(context) }
     private val preferences by lazy { Preferences.get(context) }
+    private val systems by lazy { Systems.get(context) }
 
     private var engine: EmbeddedServer<*, *>? = null
 
@@ -58,6 +61,10 @@ class WebServer(private val context: Context, private val pairing: Pairing) {
                 post("/api/pair") { pair(call) }
                 post("/api/logout") { logout(call) }
                 get("/api/state") { if (guard(call)) state(call) }
+                get("/api/collections") { if (guard(call)) collections(call) }
+                get("/api/collections/{name}/platforms") { if (guard(call)) platforms(call) }
+                get("/api/platforms/{id}/roms") { if (guard(call)) roms(call) }
+                get("/api/search") { if (guard(call)) search(call) }
                 get("/") { if (trusted(call)) asset(call, "index.html") }
                 get("/{path...}") {
                     if (trusted(call)) {
@@ -117,6 +124,9 @@ class WebServer(private val context: Context, private val pairing: Pairing) {
         if (!trusted(call, mutation = true)) return
         val pin = runCatching { JSONObject(call.receiveText()).optString("pin") }.getOrNull()
         val token = pin?.let { pairing.redeem(it, call.request.userAgent().orEmpty()) }
+        // Every attempt is recorded, granted or not. Handing out access is the one thing here worth
+        // being able to account for afterwards; the code and the token itself are never logged.
+        Log.i(TAG, "pair attempt granted=${token != null} agent=${call.request.userAgent()}")
         if (token == null) {
             // Deliberately vague: telling a caller whether the code was wrong, stale or locked out
             // tells it how close it is.
@@ -140,7 +150,7 @@ class WebServer(private val context: Context, private val pairing: Pairing) {
     }
 
     private suspend fun state(call: ApplicationCall) {
-        val romCount = withCatalog(context) { if (it.isComplete()) it.count() else null }
+        val romCount = openCatalog(context)?.use { it.count() }
         val active = JSONArray()
         queue.active.forEach { (_, value) ->
             active.put(
@@ -163,6 +173,60 @@ class WebServer(private val context: Context, private val pairing: Pairing) {
                 .put("downloaded", queue.downloaded().size)
                 .put("active", active),
         )
+    }
+
+    private suspend fun collections(call: ApplicationCall) =
+        withCatalogOr(call) { json(call, collectionsJson(it)) }
+
+    private suspend fun platforms(call: ApplicationCall) {
+        val collection = call.parameters["name"].orEmpty()
+        withCatalogOr(call) { json(call, platformsJson(it, systems, destinations, collection)) }
+    }
+
+    private suspend fun roms(call: ApplicationCall) {
+        val platformId = call.parameters["id"]?.toLongOrNull()
+        if (platformId == null) {
+            call.respond(HttpStatusCode.BadRequest)
+            return
+        }
+        val limit = pageSize(call)
+        val afterName = call.request.queryParameters["afterName"]
+        val afterId = call.request.queryParameters["afterId"]?.toLongOrNull()
+        withCatalogOr(call) { reader ->
+            val page = reader.browse(platformId, afterName, afterId, limit)
+            json(call, romsJson(page, Marks(queue), limit))
+        }
+    }
+
+    private suspend fun search(call: ApplicationCall) {
+        val query = call.request.queryParameters["q"].orEmpty()
+        val limit = pageSize(call)
+        val offset = call.request.queryParameters["offset"]?.toIntOrNull()?.coerceAtLeast(0) ?: 0
+        if (query.isBlank()) {
+            json(call, romsJson(emptyList(), Marks(queue), limit))
+            return
+        }
+        withCatalogOr(call) { reader ->
+            // Search pages by offset, not by cursor: FTS returns rows in relevance order, and there
+            // is no key to seek to. The pages are shallow — nobody scrolls to hit 500 of a search.
+            json(call, romsJson(reader.search(query, limit, offset), Marks(queue), limit))
+        }
+    }
+
+    private fun pageSize(call: ApplicationCall): Int =
+        call.request.queryParameters["limit"]?.toIntOrNull()?.coerceIn(1, MAX_PAGE) ?: DEFAULT_PAGE
+
+    /**
+     * Every catalogue route needs the same answer when there is no catalogue yet: say so plainly, so
+     * the browser can send the owner to the device to import it instead of showing an empty list.
+     */
+    private suspend fun withCatalogOr(call: ApplicationCall, block: suspend (CatalogReader) -> Unit) {
+        val reader = openCatalog(context)
+        if (reader == null) {
+            json(call, JSONObject().put("catalogReady", false), HttpStatusCode.ServiceUnavailable)
+            return
+        }
+        reader.use { block(it) }
     }
 
     private suspend fun json(
@@ -214,6 +278,10 @@ class WebServer(private val context: Context, private val pairing: Pairing) {
 
         private const val PORT_TRIES = 10
         private const val GRACE_MS = 500L
+
+        /** Matches the on-device pager's page, so both screens make the same number of queries. */
+        private const val DEFAULT_PAGE = 50
+        private const val MAX_PAGE = 200
         private const val COOKIE_MAX_AGE = 365 * 24 * 60 * 60
 
         /**

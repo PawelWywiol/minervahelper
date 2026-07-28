@@ -68,12 +68,21 @@ class CatalogReader(file: File) : Closeable {
      * the target device, while seeking to a key is flat. [after] is the last Rom of the previous
      * page — null for the first one. Names repeat, so id breaks the tie.
      */
-    fun browse(platformId: Long, after: Rom? = null, limit: Int = 50): List<Rom> {
+    fun browse(platformId: Long, after: Rom? = null, limit: Int = 50): List<Rom> =
+        browse(platformId, after?.name, after?.id, limit)
+
+    /**
+     * The same page, addressed by the cursor's two fields rather than by the row itself — the
+     * browser remote gets them back as query parameters and has no Rom to hand.
+     */
+    fun browse(platformId: Long, afterName: String?, afterId: Long?, limit: Int): List<Rom> {
         val args = mutableListOf(platformId.toString())
-        val cursor = after?.let {
-            args += listOf(it.name, it.name, it.id.toString())
+        val cursor = if (afterName != null && afterId != null) {
+            args += listOf(afterName, afterName, afterId.toString())
             " AND (f.name > ? OR (f.name = ? AND f.id > ?))"
-        }.orEmpty()
+        } else {
+            ""
+        }
         return roms(
             "FROM file f",
             "f.platform_id = ?$cursor ORDER BY f.name, f.id",

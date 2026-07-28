@@ -5,15 +5,19 @@ import io.github.pawelwywiol.minervahelper.data.catalog.CatalogReader
 import java.io.File
 
 /**
- * Opens the catalog for the length of one request and closes it again. A reader held open would
- * outlive the file: a re-import deletes and rebuilds catalog.db, and the server would then be
+ * Opens the catalog for the length of one request; the caller closes it. A reader held open would
+ * outlive the file, because a re-import deletes and rebuilds catalog.db and the server would go on
  * reading a database that no longer exists. Opening read-only SQLite is a file handle and a header
  * read, so this is cheap enough to pay per request.
  *
- * Null when there is no catalog yet — the browser is told to import it on the device.
+ * Null means "no catalog worth reading" — absent, half-imported, or built by an older schema. One
+ * definition, so no route has to decide for itself what counts as ready.
  */
-internal fun <T> withCatalog(context: Context, block: (CatalogReader) -> T): T? {
+internal fun openCatalog(context: Context): CatalogReader? {
     val file = File(context.filesDir, "catalog.db")
     if (!file.isFile) return null
-    return runCatching { CatalogReader(file).use(block) }.getOrNull()
+    val reader = runCatching { CatalogReader(file) }.getOrNull() ?: return null
+    if (runCatching { reader.isComplete() }.getOrDefault(false)) return reader
+    reader.close()
+    return null
 }
