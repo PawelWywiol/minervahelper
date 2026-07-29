@@ -255,6 +255,7 @@ internal fun settingsJson(
     return JSONObject()
         .put("root", destinations.root?.lastPathSegment ?: JSONObject.NULL)
         .put("concurrentDownloads", preferences.concurrentDownloads)
+        .put("unpackArchives", preferences.unpackArchives)
         .put("minConcurrentDownloads", minConcurrent)
         .put("maxConcurrentDownloads", maxConcurrent)
         .put("platforms", platforms)

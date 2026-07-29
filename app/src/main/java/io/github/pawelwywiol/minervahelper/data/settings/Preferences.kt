@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.edit
 
@@ -33,6 +34,19 @@ class Preferences(context: Context) {
     var concurrentDownloads by mutableIntStateOf(prefs.getInt(CONCURRENT_KEY, 2))
         private set
 
+    /**
+     * Disc-based emulators cannot read a game out of a `.zip`, so an archive holding one has to be
+     * unpacked before it is any use. On by default: an archive the emulator refuses to open looks
+     * to the user like a failed download.
+     */
+    var unpackArchives by mutableStateOf(prefs.getBoolean(UNPACK_KEY, true))
+        private set
+
+    fun updateUnpackArchives(enabled: Boolean) {
+        prefs.edit { putBoolean(UNPACK_KEY, enabled) }
+        unpackArchives = enabled
+    }
+
     fun updateFontScale(scale: Float) {
         prefs.edit { putFloat(FONT_SCALE_KEY, scale) }
         fontScale = scale
@@ -47,6 +61,7 @@ class Preferences(context: Context) {
     companion object {
         private const val FONT_SCALE_KEY = "font_scale"
         private const val CONCURRENT_KEY = "concurrent_downloads"
+        private const val UNPACK_KEY = "unpack_archives"
 
         /** The worker and the UI must read the same value the moment it changes. */
         @Volatile

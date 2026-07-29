@@ -21,6 +21,12 @@ Step **F** is the heart of it. A torrent may hold hundreds of thousands of files
 but the protocol lets us mark files as "skip". That is how we pull 40 kilobytes out
 of a torrent weighing hundreds of gigabytes.
 
+At step **H** an archive holding a disc image is opened rather than filed as it is, and
+the archive itself is dropped. Cartridge games are left zipped, because emulators read
+those straight out of the archive; no emulator will do the same for a disc, so a zipped
+one would reach the folder and simply refuse to start. The decision is made from what
+the archive contains, and it can be turned off in Settings.
+
 ## How the app knows what is where
 
 The archive publishes a database, `hashes.db` (1.64 GB), describing every file: its

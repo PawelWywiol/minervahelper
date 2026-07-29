@@ -29,6 +29,17 @@ export function settings(mount, { onError }) {
     }));
   }
 
+  function unpacking(data) {
+    return el('div', { className: 'actions' }, [true, false].map((on) => {
+      const button = el('button', {
+        type: 'button',
+        className: on === data.unpackArchives ? '' : 'ghost',
+      }, on ? 'Unpack' : 'Keep as downloaded');
+      button.addEventListener('click', () => apply({ unpackArchives: on }));
+      return button;
+    }));
+  }
+
   function editor(platform) {
     const input = el('input', { type: 'text', value: platform.folder, id: 'folder' });
     const move = el('input', { type: 'checkbox', id: 'move', checked: true });
@@ -82,6 +93,11 @@ export function settings(mount, { onError }) {
       el('h2', {}, 'Downloads at once'),
       el('p', { className: 'muted' }, 'More is not always faster — each torrent has to find its own sharers.'),
       concurrency(data),
+      el('h2', {}, 'Unpack when needed'),
+      el('p', { className: 'muted' },
+        'Disc games arrive zipped but no emulator can open them that way. Left on, they are '
+        + 'unpacked as they land and the zip is thrown away.'),
+      unpacking(data),
       el('h2', {}, 'Where each platform lands'),
       rows.length === 0
         ? el('p', { className: 'muted' }, 'Queue something to see where it will go.')

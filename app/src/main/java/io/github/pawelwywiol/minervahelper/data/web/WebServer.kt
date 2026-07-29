@@ -274,6 +274,9 @@ class WebServer(private val context: Context, private val pairing: Pairing) {
         val request = body(call) ?: return call.respond(HttpStatusCode.BadRequest)
         request.optInt("concurrentDownloads", 0).takeIf { it > 0 }
             ?.let(preferences::updateConcurrentDownloads)
+        if (request.has("unpackArchives")) {
+            preferences.updateUnpackArchives(request.optBoolean("unpackArchives"))
+        }
 
         val collection = request.optString("collection")
         val platformKey = request.optString("platformKey")

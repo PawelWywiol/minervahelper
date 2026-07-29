@@ -21,6 +21,8 @@ import io.github.pawelwywiol.minervahelper.data.queue.DownloadQueue
 import io.github.pawelwywiol.minervahelper.data.queue.DownloadState
 import io.github.pawelwywiol.minervahelper.data.placement.Destinations
 import io.github.pawelwywiol.minervahelper.data.placement.FilePlacement
+import io.github.pawelwywiol.minervahelper.data.placement.needsUnpacking
+import io.github.pawelwywiol.minervahelper.data.placement.playableName
 import io.github.pawelwywiol.minervahelper.data.queue.QueueItem
 import io.github.pawelwywiol.minervahelper.data.settings.Preferences
 import kotlinx.coroutines.CancellationException
@@ -231,26 +233,33 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
             )
             return
         }
-        val failure = placementFailure(item, file)
-        if (failure == null) {
-            queue.markDownloaded(item, destinations.folderFor(item.collection, item.platformKey))
-        } else {
-            queue.setState(item.id, DownloadState.FAILED, failure)
-        }
+        val folder = destinations.folderFor(item.collection, item.platformKey)
+        place(item, file, folder).fold(
+            onSuccess = { queue.markDownloaded(item, folder, it) },
+            onFailure = {
+                Log.e(TAG, "cannot place ${item.name} in $folder", it)
+                queue.setState(
+                    item.id, DownloadState.FAILED,
+                    "Could not save into $folder — ${it.message.orEmpty().ifEmpty { "check the folder" }}",
+                )
+            },
+        )
     }
 
-    /** Null when the file was placed; otherwise why it could not be. */
-    private fun placementFailure(item: QueueItem, file: File): String? {
-        val root = destinations.root ?: return "No destination folder chosen"
-        val folder = destinations.folderFor(item.collection, item.platformKey)
-        return runCatching { placement.place(root, folder, item.name, file) }
-            .fold(
-                onSuccess = { null },
-                onFailure = {
-                    Log.e(TAG, "cannot place ${item.name} in $folder", it)
-                    "Could not save into $folder — ${it.message.orEmpty().ifEmpty { "check the folder" }}"
-                },
-            )
+    /** The name that ended up in the folder, which differs from the download's when it was unpacked. */
+    private fun place(item: QueueItem, file: File, folder: String): kotlin.Result<String> {
+        val root = destinations.root
+            ?: return kotlin.Result.failure(IllegalStateException("No destination folder chosen"))
+        return runCatching {
+            if (preferences.unpackArchives && needsUnpacking(item.name, file)) {
+                val written = placement.unpack(root, folder, file)
+                check(written.isNotEmpty()) { "the archive was empty" }
+                playableName(written)
+            } else {
+                placement.place(root, folder, item.name, file)
+                item.name
+            }
+        }
     }
 
     private suspend fun report(label: String, percent: Int) = setForeground(

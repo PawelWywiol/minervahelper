@@ -155,6 +155,21 @@ fun FoldersScreen(
                 onSelect = preferences::updateConcurrentDownloads,
             )
             Spacer(Modifier.height(16.dp))
+            Text("Unpack when needed", style = MaterialTheme.typography.titleSmall)
+            Text(
+                "Disc games arrive zipped but no emulator can open them that way. Leave this on and " +
+                    "they are unpacked as they land, and the zip is thrown away.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(4.dp))
+            ChoiceRow(
+                options = listOf(true, false),
+                current = preferences.unpackArchives,
+                label = { if (it) "Unpack" else "Keep as downloaded" },
+                onSelect = preferences::updateUnpackArchives,
+            )
+            Spacer(Modifier.height(16.dp))
             Row {
                 OutlinedButton(onClick = onWebRemote) {
                     Text(if (WebRemote.running) "Browser remote · on" else "Browser remote")

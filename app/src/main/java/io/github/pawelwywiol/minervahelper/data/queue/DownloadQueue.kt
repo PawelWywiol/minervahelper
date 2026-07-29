@@ -152,13 +152,17 @@ class DownloadQueue(context: Context) {
         }
 
     /** A finished download leaves the queue and becomes a downloaded record (R37). */
-    fun markDownloaded(item: QueueItem, folder: String) {
+    /**
+     * [name] is what actually landed in the folder, which is not the downloaded file's name when an
+     * archive was unpacked on arrival — the record has to name the file the user will see there.
+     */
+    fun markDownloaded(item: QueueItem, folder: String, name: String = item.name) {
         val db = helper.writableDatabase
         db.beginTransaction()
         try {
             db.insertWithOnConflict(
                 "downloaded", null,
-                downloadedValues(item.name, item.size, item.collection, item.platformKey, item.torrentPath, item.soId, folder),
+                downloadedValues(name, item.size, item.collection, item.platformKey, item.torrentPath, item.soId, folder),
                 SQLiteDatabase.CONFLICT_REPLACE,
             )
             db.delete("item", "id = ?", arrayOf(item.id.toString()))
