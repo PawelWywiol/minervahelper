@@ -1,7 +1,6 @@
 package io.github.pawelwywiol.minervahelper.data.web
 
 import android.content.Context
-import android.os.StatFs
 import android.util.Log
 import io.github.pawelwywiol.minervahelper.BuildConfig
 import io.github.pawelwywiol.minervahelper.data.catalog.CatalogReader
@@ -312,7 +311,7 @@ class WebServer(private val context: Context, private val pairing: Pairing) {
             systems = systems,
             destinations = destinations,
             working = DownloadWorker.isActive(context),
-            freeBytes = StatFs(context.filesDir.path).availableBytes,
+            freeBytes = destinations.freeBytes(),
             recentDownloads = RECENT_DOWNLOADS,
         ),
     )

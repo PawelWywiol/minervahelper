@@ -1,6 +1,5 @@
 package io.github.pawelwywiol.minervahelper.ui.queue
 
-import android.os.StatFs
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -79,7 +78,7 @@ fun QueueScreen(queue: DownloadQueue, destinations: Destinations, onFolders: () 
 
     val items = groups.flatMap { it.items }
     val total = items.sumOf { it.size }
-    val free = remember { StatFs(context.filesDir.path).availableBytes }
+    val free = remember(destinations.root) { destinations.freeBytes() }
     val working by remember { DownloadWorker.isActiveFlow(context) }
         .collectAsState(initial = true)
 

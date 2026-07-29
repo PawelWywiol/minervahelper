@@ -125,7 +125,12 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
 
         try {
             val needed = items.sumOf { it.size }
-            val free = StatFs(applicationContext.filesDir.path).availableBytes
+            // The bytes have to fit twice: first in staging on internal storage, then again in the
+            // destination folder, which is usually a card with quite different space left.
+            val free = minOf(
+                StatFs(applicationContext.filesDir.path).availableBytes,
+                Destinations.get(applicationContext).freeBytes(),
+            )
             if (needed > free) {
                 throw OutOfSpace(needed, free)
             }
