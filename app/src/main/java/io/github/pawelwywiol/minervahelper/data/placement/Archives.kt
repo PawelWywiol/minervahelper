@@ -20,6 +20,10 @@ private val UNPACKED_EXTENSIONS = setOf(
     "iso", "chd", "cue", "gdi", "cdi", "rvz", "gcm", "wbfs", "nkit", "cso", "img", "mdf", "ccd",
     // Nintendo 64 — Mupen64Plus FZ takes the raw ROM only
     "z64", "n64", "v64", "ndd",
+    // Wii U — Cemu lists the .wux files in a folder and silently skips the zipped ones
+    "wux", "wud", "wua", "rpx",
+    // PlayStation 3 — RPCSX installs a .pkg into its own library and cannot reach one inside a zip
+    "pkg",
 )
 
 /** Every name inside the archive, or empty when it is not a readable zip. */
@@ -57,4 +61,5 @@ fun playableName(written: List<String>): String =
 private val PLAYABLE_EXTENSIONS = setOf(
     "m3u", "cue", "gdi", "ccd", "chd", "iso", "rvz", "gcm", "wbfs", "cdi", "cso",
     "z64", "n64", "v64", "ndd",
+    "wua", "wux", "wud", "pkg",
 )
