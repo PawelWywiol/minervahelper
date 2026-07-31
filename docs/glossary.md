@@ -81,6 +81,22 @@ after the device restarts. Downloads rely on it.
 The persistent notification Android requires whenever an app does lengthy work in
 the background. It exists so that no app can consume battery and data invisibly.
 
+### Browser remote
+
+The app's optional control page, opened in a browser on the same Wi-Fi. The handheld
+serves the page itself; the browser only tells it what to do, and downloads still land
+on the handheld.
+
+### Pairing code
+
+The six digits the device shows once so a browser can be let in. It is used once, lapses
+after two minutes, and stands in for a password nobody would want to type on a D-pad.
+
+### Local network / LAN
+
+The private network your router gives to the devices in your home. The browser remote is
+reachable there and nowhere else — no part of it is exposed to the internet.
+
 ### D-pad
 
 The directional pad on a gamepad. On a handheld console it often replaces the

@@ -42,6 +42,7 @@ import io.github.pawelwywiol.minervahelper.data.placement.FileMover
 import io.github.pawelwywiol.minervahelper.data.placement.FilePlacement
 import io.github.pawelwywiol.minervahelper.data.queue.DownloadQueue
 import io.github.pawelwywiol.minervahelper.data.queue.DownloadedItem
+import io.github.pawelwywiol.minervahelper.data.web.WebRemote
 import io.github.pawelwywiol.minervahelper.ui.FocusableRow
 import io.github.pawelwywiol.minervahelper.ui.FocusedList
 import io.github.pawelwywiol.minervahelper.ui.Screen
@@ -58,7 +59,12 @@ private val GRANT_FLAGS =
     Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
 
 @Composable
-fun FoldersScreen(destinations: Destinations, queue: DownloadQueue, onDev: (() -> Unit)? = null) {
+fun FoldersScreen(
+    destinations: Destinations,
+    queue: DownloadQueue,
+    onWebRemote: () -> Unit,
+    onDev: (() -> Unit)? = null,
+) {
     val context = LocalContext.current
     val placement = remember { FilePlacement(context) }
     val preferences = remember { Preferences.get(context) }
@@ -148,6 +154,27 @@ fun FoldersScreen(destinations: Destinations, queue: DownloadQueue, onDev: (() -
                 label = { it.toString() },
                 onSelect = preferences::updateConcurrentDownloads,
             )
+            Spacer(Modifier.height(16.dp))
+            Text("Unpack when needed", style = MaterialTheme.typography.titleSmall)
+            Text(
+                "Disc games arrive zipped but no emulator can open them that way. Leave this on and " +
+                    "they are unpacked as they land, and the zip is thrown away.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(4.dp))
+            ChoiceRow(
+                options = listOf(true, false),
+                current = preferences.unpackArchives,
+                label = { if (it) "Unpack" else "Keep as downloaded" },
+                onSelect = preferences::updateUnpackArchives,
+            )
+            Spacer(Modifier.height(16.dp))
+            Row {
+                OutlinedButton(onClick = onWebRemote) {
+                    Text(if (WebRemote.running) "Browser remote · on" else "Browser remote")
+                }
+            }
         }
         Spacer(Modifier.height(12.dp))
 

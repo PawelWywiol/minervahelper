@@ -3,10 +3,14 @@ package io.github.pawelwywiol.minervahelper.data.placement
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Environment
+import android.os.StatFs
+import android.provider.DocumentsContract
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.edit
+import java.io.File
 
 /**
  * Where downloaded ROMs are put: one root folder chosen by the user, and one subfolder per platform.
@@ -59,6 +63,23 @@ class Destinations(context: Context) {
     fun isMapped(collection: String, platformKey: String): Boolean =
         platforms.isMapped(collection, platformKey)
 
+    /**
+     * Free space on the card or partition the root folder lives on — not on internal storage, which
+     * is where the app's own files sit and is a different, usually much emptier volume.
+     *
+     * A tree URI carries the volume as the part of its document id before the colon: "primary" for
+     * built-in storage, the volume's UUID for a card, which is also its mount point under /storage.
+     * Anything unexpected falls back to internal storage rather than reporting nothing.
+     */
+    fun freeBytes(): Long {
+        val directory = root
+            ?.let { runCatching { DocumentsContract.getTreeDocumentId(it) }.getOrNull() }
+            ?.substringBefore(':')
+            ?.let { if (it == PRIMARY_VOLUME) Environment.getExternalStorageDirectory() else File("/storage/$it") }
+        return runCatching { StatFs(directory!!.path).availableBytes }
+            .getOrElse { StatFs(app.filesDir.path).availableBytes }
+    }
+
     /** Bumped on every override so the mapping screen redraws. */
     var revision by mutableStateOf(0)
         private set
@@ -67,6 +88,7 @@ class Destinations(context: Context) {
 
     companion object {
         private const val ROOT_KEY = "root"
+        private const val PRIMARY_VOLUME = "primary"
 
         @Volatile
         private var instance: Destinations? = null

@@ -21,6 +21,12 @@ Step **F** is the heart of it. A torrent may hold hundreds of thousands of files
 but the protocol lets us mark files as "skip". That is how we pull 40 kilobytes out
 of a torrent weighing hundreds of gigabytes.
 
+At step **H** an archive holding a disc image is opened rather than filed as it is, and
+the archive itself is dropped. Cartridge games are left zipped, because emulators read
+those straight out of the archive; no emulator will do the same for a disc, so a zipped
+one would reach the folder and simply refuse to start. The decision is made from what
+the archive contains, and it can be turned off in Settings.
+
 ## How the app knows what is where
 
 The archive publishes a database, `hashes.db` (1.64 GB), describing every file: its
@@ -51,6 +57,7 @@ Conversion takes **80 seconds** on the device.
 | **Game info** (`data/metadata/`) | Canonical titles and cover art, fetched without an API key |
 | **Interface** (`ui/`) | Screens, gamepad handling |
 | **Background work** (`work/`) | Running while the app is closed, notifications |
+| **Browser remote** (`data/web/`) | The optional server that lets a browser on the same Wi-Fi drive the app |
 
 One torrent engine serves the whole app, not one per download — several downloads at
 once share a single session, each with its own staging folder, because libtorrent is
@@ -62,6 +69,32 @@ hasheous.org, both looked up by checksum and neither needing an account. Anythin
 richer (descriptions, box scans from IGDB) is gated behind per-user API keys, which
 is exactly the setup hassle this app exists to avoid.
 
+## The browser remote
+
+The app can hand its own controls to a browser on the same Wi-Fi. There is no second
+server anywhere: the app *is* the server, and the page it serves ships inside the APK.
+
+The browser never gets its own copy of a rule. Queueing a game from a browser calls the
+very function the on-device Download button calls, so a file already sitting on the card
+is recognised as downloaded there too; favourites, folders and the queue are the same
+objects the screens use, which is why a change made in one place appears in the other
+without either side refreshing.
+
+How it is kept closed:
+
+- **Off by default**, never auto-starts, stops itself when Wi-Fi goes away, and runs a
+  notification the whole time — it cannot listen invisibly.
+- Bound to the **Wi-Fi address only**, never `0.0.0.0` and never on mobile data.
+- A browser is let in by a **six-digit code shown on the device**: single use, two-minute
+  life, five wrong guesses lock pairing for five minutes. It then holds a 256-bit token
+  in a `HttpOnly; SameSite=Strict` cookie, stored on the device only as a SHA-256 hash.
+- Every request must name the address the server bound to, which is what stops a page
+  elsewhere on the internet from pointing a hostname it controls at the handheld.
+  Anything that changes state additionally needs a header no cross-site form can set.
+- **No route returns the contents of a file on the device.** The only bytes it serves are
+  the page itself, out of the APK, and a game's cover art, which is inlined into that
+  game's own JSON rather than given an address of its own.
+
 ## Technologies and why
 
 | Technology | Used for |
@@ -71,6 +104,8 @@ is exactly the setup hassle this app exists to avoid.
 | SQLite + FTS4 | Catalogue storage and fast full-text search |
 | WorkManager | Background work that survives app closure and reboots |
 | OkHttp | HTTPS downloads |
+| Ktor (CIO engine) | The browser remote's HTTP server, embedded in the app |
+| Plain HTML + ES modules | The browser remote's page — no framework, no build step, no npm |
 
 We deliberately avoid dependency-injection frameworks and heavy abstraction layers —
 this is a single-module project and is meant to stay simple.

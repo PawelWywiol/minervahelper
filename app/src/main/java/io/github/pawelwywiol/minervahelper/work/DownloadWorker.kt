@@ -16,10 +16,13 @@ import io.github.pawelwywiol.minervahelper.data.download.SelectiveDownloader
 import io.github.pawelwywiol.minervahelper.data.download.TorrentCache
 import io.github.pawelwywiol.minervahelper.data.download.loadTorrentInfo
 import io.github.pawelwywiol.minervahelper.data.download.md5
+import io.github.pawelwywiol.minervahelper.data.catalog.CatalogReader
 import io.github.pawelwywiol.minervahelper.data.queue.DownloadQueue
 import io.github.pawelwywiol.minervahelper.data.queue.DownloadState
 import io.github.pawelwywiol.minervahelper.data.placement.Destinations
 import io.github.pawelwywiol.minervahelper.data.placement.FilePlacement
+import io.github.pawelwywiol.minervahelper.data.placement.needsUnpacking
+import io.github.pawelwywiol.minervahelper.data.placement.playableName
 import io.github.pawelwywiol.minervahelper.data.queue.QueueItem
 import io.github.pawelwywiol.minervahelper.data.settings.Preferences
 import kotlinx.coroutines.CancellationException
@@ -124,7 +127,12 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
 
         try {
             val needed = items.sumOf { it.size }
-            val free = StatFs(applicationContext.filesDir.path).availableBytes
+            // The bytes have to fit twice: first in staging on internal storage, then again in the
+            // destination folder, which is usually a card with quite different space left.
+            val free = minOf(
+                StatFs(applicationContext.filesDir.path).availableBytes,
+                Destinations.get(applicationContext).freeBytes(),
+            )
             if (needed > free) {
                 throw OutOfSpace(needed, free)
             }
@@ -225,26 +233,33 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
             )
             return
         }
-        val failure = placementFailure(item, file)
-        if (failure == null) {
-            queue.markDownloaded(item, destinations.folderFor(item.collection, item.platformKey))
-        } else {
-            queue.setState(item.id, DownloadState.FAILED, failure)
-        }
+        val folder = destinations.folderFor(item.collection, item.platformKey)
+        place(item, file, folder).fold(
+            onSuccess = { queue.markDownloaded(item, folder, it) },
+            onFailure = {
+                Log.e(TAG, "cannot place ${item.name} in $folder", it)
+                queue.setState(
+                    item.id, DownloadState.FAILED,
+                    "Could not save into $folder — ${it.message.orEmpty().ifEmpty { "check the folder" }}",
+                )
+            },
+        )
     }
 
-    /** Null when the file was placed; otherwise why it could not be. */
-    private fun placementFailure(item: QueueItem, file: File): String? {
-        val root = destinations.root ?: return "No destination folder chosen"
-        val folder = destinations.folderFor(item.collection, item.platformKey)
-        return runCatching { placement.place(root, folder, item.name, file) }
-            .fold(
-                onSuccess = { null },
-                onFailure = {
-                    Log.e(TAG, "cannot place ${item.name} in $folder", it)
-                    "Could not save into $folder — ${it.message.orEmpty().ifEmpty { "check the folder" }}"
-                },
-            )
+    /** The name that ended up in the folder, which differs from the download's when it was unpacked. */
+    private fun place(item: QueueItem, file: File, folder: String): kotlin.Result<String> {
+        val root = destinations.root
+            ?: return kotlin.Result.failure(IllegalStateException("No destination folder chosen"))
+        return runCatching {
+            if (preferences.unpackArchives && needsUnpacking(item.name, file)) {
+                val written = placement.unpack(root, folder, file)
+                check(written.isNotEmpty()) { "the archive was empty" }
+                playableName(written)
+            } else {
+                placement.place(root, folder, item.name, file)
+                item.name
+            }
+        }
     }
 
     private suspend fun report(label: String, percent: Int) = setForeground(
@@ -281,6 +296,42 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
         fun isActiveFlow(context: Context): Flow<Boolean> =
             WorkManager.getInstance(context).getWorkInfosForUniqueWorkFlow(NAME)
                 .map { infos -> infos.any { !it.state.isFinished } }
+
+        /** The same answer, for callers outside Compose. Blocking; a local query, not a network one. */
+        fun isActive(context: Context): Boolean =
+            WorkManager.getInstance(context).getWorkInfosForUniqueWork(NAME).get()
+                .any { !it.state.isFinished }
+
+        /**
+         * Queueing is more than an insert: a file already sitting in the destination counts as
+         * downloaded instead of being fetched again (R38), and anything genuinely queued starts
+         * downloading on its own (R36) — unless the user explicitly asks for a re-download of
+         * something they already have.
+         *
+         * Lives here rather than in a screen because the browser remote queues ROMs too, and a
+         * second copy of this rule would be a second chance to get it wrong. Blocking: it touches
+         * the queue database and the destination tree.
+         */
+        fun toggleDownload(context: Context, rom: CatalogReader.Rom): Boolean {
+            val queue = DownloadQueue.get(context)
+            val destinations = Destinations.get(context)
+            val added = when {
+                queue.contains(rom) -> { queue.toggle(rom); false }
+                queue.isDownloaded(rom) -> queue.toggle(rom)
+                else -> {
+                    val root = destinations.root
+                    val folder = destinations.folderFor(rom.collection, rom.platformKey)
+                    if (root != null && FilePlacement(context).exists(root, folder, rom.name, rom.size)) {
+                        queue.recordDownloaded(rom, folder)
+                        false
+                    } else {
+                        queue.toggle(rom)
+                    }
+                }
+            }
+            if (added) enqueue(context)
+            return added
+        }
     }
 }
 

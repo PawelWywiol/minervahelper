@@ -54,7 +54,6 @@ import io.github.pawelwywiol.minervahelper.data.metadata.GameInfoLookup
 import io.github.pawelwywiol.minervahelper.data.catalog.Favourites
 import io.github.pawelwywiol.minervahelper.data.catalog.Systems
 import io.github.pawelwywiol.minervahelper.data.placement.Destinations
-import io.github.pawelwywiol.minervahelper.data.placement.FilePlacement
 import io.github.pawelwywiol.minervahelper.data.queue.DownloadQueue
 import io.github.pawelwywiol.minervahelper.work.DownloadWorker
 import io.github.pawelwywiol.minervahelper.ui.FocusableRow
@@ -395,7 +394,11 @@ private fun RomDetailPane(
                     Text(if (favourites.contains(it)) "Remove from favourites" else "Add to favourites")
                 }
                 Spacer(Modifier.height(8.dp))
-                Button(onClick = { scope.launch { toggleDownload(context, queue, it) } }) {
+                Button(onClick = {
+                    scope.launch {
+                        withContext(Dispatchers.IO) { DownloadWorker.toggleDownload(context, it) }
+                    }
+                }) {
                     Text(
                         when {
                             inQueue -> "Remove from queue"
@@ -418,36 +421,6 @@ private fun RomDetailPane(
             }
         }
     }
-}
-
-/**
- * Queueing is more than an insert: a file already sitting in the destination counts as downloaded
- * instead of being fetched again (R38), and anything genuinely queued starts downloading on its
- * own (R36) — unless the user explicitly asks for a re-download of something they already have.
- */
-private suspend fun toggleDownload(
-    context: android.content.Context,
-    queue: DownloadQueue,
-    rom: CatalogReader.Rom,
-) {
-    val destinations = Destinations.get(context)
-    val added = withContext(Dispatchers.IO) {
-        when {
-            queue.contains(rom) -> { queue.toggle(rom); false }
-            queue.isDownloaded(rom) -> queue.toggle(rom)
-            else -> {
-                val root = destinations.root
-                val folder = destinations.folderFor(rom.collection, rom.platformKey)
-                if (root != null && FilePlacement(context).exists(root, folder, rom.name, rom.size)) {
-                    queue.recordDownloaded(rom, folder)
-                    false
-                } else {
-                    queue.toggle(rom)
-                }
-            }
-        }
-    }
-    if (added) DownloadWorker.enqueue(context)
 }
 
 /**
